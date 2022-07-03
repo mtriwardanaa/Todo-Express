@@ -4,6 +4,7 @@ import {
   createData,
   updateData,
   deleteData,
+  login,
 } from '../../Modules/user/controllers/user-controller';
 
 const router = Router();
@@ -17,5 +18,6 @@ router.get('/', getData);
 router.post('/create', createData);
 router.put('/update/:id', updateData);
 router.delete('/delete/:id', deleteData);
+router.post('/login/', login);
 
 export default router;

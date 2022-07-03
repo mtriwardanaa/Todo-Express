@@ -5,6 +5,8 @@ import { UserRes } from '../interfaces/user-res';
 import { UserSearch } from '../interfaces/user-search';
 import { User } from '../models/user-model';
 import { hashPass } from '../../../utils/bcrypt-pass';
+import bcrypt from 'bcrypt';
+import config from '../../../configs/config';
 
 const getUser = async (): Promise<UserRes[] | null> => {
   const user = await AppDataSource.createQueryBuilder()
@@ -28,7 +30,7 @@ const getOneUser = async (id: string): Promise<UserRes | null> => {
 const searchUser = async (
   params: UserSearch,
   one: boolean
-): Promise<UserRes[] | UserRes | UserSearch | string | null> => {
+): Promise<UserRes[] | UserRes | UserSearch | null> => {
   const user = AppDataSource.createQueryBuilder()
     .select('user')
     .from(User, 'user');
@@ -65,6 +67,32 @@ const deleteUser = async (id: string): Promise<DeleteResult> => {
   return User.delete(id);
 };
 
+const authUser = async (
+  username: string,
+  password: string
+): Promise<User | null> => {
+  const check = await AppDataSource.createQueryBuilder()
+    .select('user')
+    .from(User, 'user')
+    .where('user.username = :username', { username: username })
+    .getOne();
+
+  if (!check) {
+    return null;
+  }
+
+  const hashPass = check.password;
+  const isPassValid = bcrypt.compareSync(
+    `${password}${config.bcPass}`,
+    hashPass
+  );
+
+  if (!isPassValid) {
+    return null;
+  }
+  return check;
+};
+
 export default {
   getUser,
   getOneUser,
@@ -72,4 +100,5 @@ export default {
   createUser,
   updateUser,
   deleteUser,
+  authUser,
 };

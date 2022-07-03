@@ -53,4 +53,18 @@ const deleteData = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export { getData, createData, updateData, deleteData };
+const login = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { username, password } = req.body;
+    const ampas = await UserService.login(username, password);
+    res.json({
+      status: 'success',
+      data: ampas,
+      message: 'login user success',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { getData, createData, updateData, deleteData, login };
