@@ -4,19 +4,17 @@ import {
   createData,
   updateData,
   deleteData,
-  login,
-} from '../../Modules/user/controllers/user-controller';
+} from '../../Modules/project/controllers/project-controller';
 
 const router = Router();
 
 router.get('/ping', (req: Request, res: Response, next: NextFunction) => {
-  res.status(200).json({ message: 'Pong user route' });
+  res.status(200).json({ message: 'Pong project route' });
 });
 
 router.get('/', getData);
 router.post('/create', createData);
 router.put('/update/:id', updateData);
 router.delete('/delete/:id', deleteData);
-router.post('/login/', login);
 
 export default router;

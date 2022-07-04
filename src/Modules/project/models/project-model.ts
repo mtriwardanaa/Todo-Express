@@ -22,7 +22,6 @@ export class Project extends BaseEntity {
 
   @Column({
     default: false,
-    name: 'favorite',
   })
   favorite!: boolean;
 
