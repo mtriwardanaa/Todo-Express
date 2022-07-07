@@ -4,20 +4,27 @@ import { ProjectReq } from '../interfaces/project-req';
 import { ProjectRes } from '../interfaces/project-res';
 import { Project } from '../models/project-model';
 
-const getProject = async (): Promise<ProjectRes[] | null> => {
-  const project = await AppDataSource.createQueryBuilder()
+const getProject = async (
+  count: boolean = false
+): Promise<ProjectRes[] | number | null> => {
+  const project = AppDataSource.createQueryBuilder()
     .select('project')
     .from(Project, 'project')
-    .getMany();
+    .orderBy('project.order', 'ASC')
+    .addOrderBy('project.updated_at', 'DESC');
 
-  return project;
+  if (count) {
+    return project.getCount();
+  }
+
+  return project.getMany();
 };
 
 const getOneProject = async (id: string): Promise<ProjectRes | null> => {
   const project = await AppDataSource.createQueryBuilder()
     .select('project')
     .from(Project, 'project')
-    .where('project.id = :projectId', { ProjectId: id })
+    .where('project.id = :projectId', { projectId: id })
     .getOne();
 
   return project;
@@ -43,6 +50,7 @@ const searchProject = async (
 };
 
 const createProject = async (data: ProjectReq): Promise<ProjectRes> => {
+  data.order = ((await getProject(true)) as unknown as number) + 1;
   const create = await AppDataSource.createQueryBuilder()
     .insert()
     .into(Project)
@@ -57,16 +65,36 @@ const updateProject = async (
   id: string
 ): Promise<UpdateResult> => {
   const project = await AppDataSource.createQueryBuilder()
-    .update('projects')
+    .update('project')
     .set(data)
-    .where('projects.id = :projectId', { projectId: id })
+    .where('project.id = :projectId', { projectId: id })
     .execute();
+
+  await reorderProject();
 
   return project;
 };
 
 const deleteProject = async (id: string): Promise<DeleteResult> => {
-  return Project.delete(id);
+  const deleteProject = await Project.delete(id);
+
+  await reorderProject();
+
+  return deleteProject;
+};
+
+const reorderProject = async (): Promise<boolean | void> => {
+  const project: any = await getProject();
+
+  if (project) {
+    project.forEach(async function (value: any, index: any) {
+      await AppDataSource.createQueryBuilder()
+        .update('project')
+        .set({ order: index + 1 })
+        .where('project.id = :projectId', { projectId: value.id })
+        .execute();
+    });
+  }
 };
 
 export default {

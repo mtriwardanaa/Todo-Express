@@ -14,6 +14,20 @@ const getData = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const getOneData = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const ampas = await ProjectService.getOneProject(id);
+    res.json({
+      status: 'success',
+      data: ampas,
+      message: 'get one project success',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const createData = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const ampas = await ProjectService.createProject(req.body);
@@ -53,4 +67,4 @@ const deleteData = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export { getData, createData, updateData, deleteData };
+export { getData, createData, updateData, deleteData, getOneData };

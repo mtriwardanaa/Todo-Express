@@ -55,9 +55,10 @@ const createUser = async (data: UserReq): Promise<UserRes> => {
 
 const updateUser = async (data: UserReq, id: string): Promise<UpdateResult> => {
   const user = await AppDataSource.createQueryBuilder()
-    .update('users')
+    .update('user')
     .set(data)
-    .where('users.id = :userId', { userId: id })
+    .where('id = :userId', { userId: id })
+    // .where('user.id = :fserId', { userId: id })
     .execute();
 
   return user;

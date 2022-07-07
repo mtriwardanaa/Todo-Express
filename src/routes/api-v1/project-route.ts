@@ -4,6 +4,7 @@ import {
   createData,
   updateData,
   deleteData,
+  getOneData,
 } from '../../Modules/project/controllers/project-controller';
 
 const router = Router();
@@ -13,6 +14,7 @@ router.get('/ping', (req: Request, res: Response, next: NextFunction) => {
 });
 
 router.get('/', getData);
+router.get('/:id', getOneData);
 router.post('/create', createData);
 router.put('/update/:id', updateData);
 router.delete('/delete/:id', deleteData);

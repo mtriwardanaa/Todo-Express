@@ -5,6 +5,10 @@ const getProject = async () => {
   return ProjectRepo.getProject();
 };
 
+const getOneProject = async (id: string) => {
+  return ProjectRepo.getOneProject(id);
+};
+
 const createProject = async (data: ProjectReq) => {
   return ProjectRepo.createProject(data);
 };
@@ -17,4 +21,10 @@ const deleteProject = async (id: string) => {
   return ProjectRepo.deleteProject(id);
 };
 
-export default { getProject, createProject, updateProject, deleteProject };
+export default {
+  getProject,
+  createProject,
+  updateProject,
+  deleteProject,
+  getOneProject,
+};
