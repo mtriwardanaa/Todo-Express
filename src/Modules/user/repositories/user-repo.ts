@@ -1,105 +1,86 @@
 import AppDataSource from '../../../configs/connect';
-import { DeleteResult, UpdateResult } from 'typeorm';
 import { UserReq } from '../interfaces/user-req';
-import { UserRes } from '../interfaces/user-res';
 import { UserSearch } from '../interfaces/user-search';
 import { User } from '../models/user-model';
-import { hashPass } from '../../../utils/bcrypt-pass';
-import bcrypt from 'bcrypt';
-import config from '../../../configs/config';
+import { checkHash, hashPass } from '../../../utils/bcrypt-pass';
 
-const getUser = async (): Promise<UserRes[] | null> => {
-  const user = await AppDataSource.createQueryBuilder()
-    .select('user')
-    .from(User, 'user')
-    .getMany();
+class UserRepo {
+  private readonly _db = AppDataSource;
 
-  return user;
-};
+  async getUser() {
+    return this._db
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user')
+      .getMany();
+  }
 
-const getOneUser = async (id: string): Promise<UserRes | null> => {
-  const user = await AppDataSource.createQueryBuilder()
-    .select('user')
-    .from(User, 'user')
-    .where('user.id = :userId', { UserId: id })
-    .getOne();
+  async getOneUser(id: UserReq['id']) {
+    return this._db
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user')
+      .where('user.id = :userId', { UserId: id })
+      .getOne();
+  }
 
-  return user;
-};
+  async searchUser(params: UserSearch, one: boolean) {
+    const user = this._db
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user');
 
-const searchUser = async (
-  params: UserSearch,
-  one: boolean
-): Promise<UserRes[] | UserRes | UserSearch | null> => {
-  const user = AppDataSource.createQueryBuilder()
-    .select('user')
-    .from(User, 'user');
+    Object.entries(params).forEach(([key, value], index) => {
+      if (index === 0) {
+        user.where(`user.${key} = :param`, { param: 'ampas' });
+      } else {
+        user.andWhere(`user.${key} = :param`, { param: value });
+      }
+    });
 
-  Object.entries(params).forEach(([key, value], index) => {
-    if (index === 0) {
-      user.where(`user.${key} = :param`, { param: 'ampas' });
-    } else {
-      user.andWhere(`user.${key} = :param`, { param: value });
+    return one ? user.getOne() : user.getMany();
+  }
+
+  async createUser(data: UserReq) {
+    data.password = hashPass(data.password as string);
+    const create = User.create(data);
+
+    return create.save();
+  }
+
+  async updateUser(data: UserReq, id: UserReq['id']) {
+    return this._db
+      .createQueryBuilder()
+      .update('user')
+      .set(data)
+      .where('id = :userId', { userId: id })
+      .execute();
+  }
+
+  async deleteUser(id: UserReq['id']) {
+    return User.delete(id!);
+  }
+
+  async authUser(username: UserReq['username'], password: UserReq['password']) {
+    const check = await this._db
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user')
+      .where('user.username = :username', { username: username })
+      .getOne();
+
+    if (!check) {
+      return null;
     }
-  });
 
-  return one ? user.getOne() : user.getMany();
-};
+    const hashPass = check.password;
+    const isPassValid = checkHash(password!, hashPass);
 
-const createUser = async (data: UserReq): Promise<UserRes> => {
-  data.password = hashPass(data.password as string);
-  const create = User.create(data);
-
-  return create.save();
-};
-
-const updateUser = async (data: UserReq, id: string): Promise<UpdateResult> => {
-  const user = await AppDataSource.createQueryBuilder()
-    .update('user')
-    .set(data)
-    .where('id = :userId', { userId: id })
-    // .where('user.id = :fserId', { userId: id })
-    .execute();
-
-  return user;
-};
-
-const deleteUser = async (id: string): Promise<DeleteResult> => {
-  return User.delete(id);
-};
-
-const authUser = async (
-  username: string,
-  password: string
-): Promise<User | null> => {
-  const check = await AppDataSource.createQueryBuilder()
-    .select('user')
-    .from(User, 'user')
-    .where('user.username = :username', { username: username })
-    .getOne();
-
-  if (!check) {
-    return null;
+    if (!isPassValid) {
+      return null;
+    }
+    return check;
   }
+}
 
-  const hashPass = check.password;
-  const isPassValid = bcrypt.compareSync(
-    `${password}${config.bcPass}`,
-    hashPass
-  );
-
-  if (!isPassValid) {
-    return null;
-  }
-  return check;
-};
-
-export default {
-  getUser,
-  getOneUser,
-  searchUser,
-  createUser,
-  updateUser,
-  deleteUser,
-  authUser,
-};
+export default UserRepo;

@@ -1,35 +1,38 @@
 import { UserReq } from '../interfaces/user-req';
 import UserRepo from '../repositories/user-repo';
-import jwt from 'jsonwebtoken';
-import config from '../../../configs/config';
+import { signToken } from '../../../utils/token';
 
-const getUser = async () => {
-  return UserRepo.getUser();
-};
+export class UserService {
+  constructor(private readonly _userRepo: UserRepo) {}
 
-const createUser = async (data: UserReq) => {
-  return UserRepo.createUser(data);
-};
-
-const updateUser = async (data: UserReq, id: string) => {
-  return UserRepo.updateUser(data, id);
-};
-
-const deleteUser = async (id: string) => {
-  return UserRepo.deleteUser(id);
-};
-
-const login = async (username: string, password: string) => {
-  const check = await UserRepo.authUser(username, password);
-  if (!check) {
-    return false;
+  async getUser() {
+    return this._userRepo.getUser();
   }
 
-  const token = jwt.sign({ check }, config.tokenSecret as unknown as string);
-  return {
-    ...check,
-    token: token,
-  };
-};
+  async createUser(data: UserReq) {
+    return this._userRepo.createUser(data);
+  }
 
-export default { getUser, createUser, updateUser, deleteUser, login };
+  async updateUser(data: UserReq, id: UserReq['id']) {
+    return this._userRepo.updateUser(data, id);
+  }
+
+  async deleteUser(id: UserReq['id']) {
+    return this._userRepo.deleteUser(id);
+  }
+
+  async login(username: UserReq['username'], password: UserReq['password']) {
+    const check = await this._userRepo.authUser(username, password);
+    if (!check) {
+      return false;
+    }
+
+    const token = signToken(check);
+    return {
+      ...check,
+      token: token,
+    };
+  }
+}
+
+export default UserService;

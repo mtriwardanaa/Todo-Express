@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../configs/config';
+import { checkUser } from '../utils/token';
 
 const handleAuthorizedError = (next: NextFunction) => {
   const error: Error = new Error('Login error: please try again');
@@ -26,10 +27,7 @@ const validateTokenMiddleware = (
       const bearer = authHeader.split(' ')[0].toLowerCase();
       const token = authHeader.split(' ')[1];
       if (token && bearer === 'bearer') {
-        const decode = jwt.verify(
-          token,
-          config.tokenSecret as unknown as string
-        );
+        const decode = checkUser(token);
         if (decode) {
           next();
         } else {

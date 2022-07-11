@@ -11,6 +11,7 @@ archived
 
 section
 name
+order
 
 task
 project_id
