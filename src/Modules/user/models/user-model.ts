@@ -30,15 +30,17 @@ export class User extends BaseEntity {
   })
   is_active!: boolean;
 
-  @OneToMany(() => Task, (task) => task.section)
-  tasks!: Task;
-
-  @OneToMany(() => Project, (project) => project.user)
-  projects!: Project;
-
   @CreateDateColumn()
   created_at!: Date;
 
   @UpdateDateColumn()
   updated_at!: Date;
+
+  //user to task table, sementara belum di pakai
+  @OneToMany(() => Task, (task) => task.section)
+  tasks!: Task;
+
+  //user to project table
+  @OneToMany(() => Project, (project) => project.user)
+  projects!: Project;
 }

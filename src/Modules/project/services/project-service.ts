@@ -2,30 +2,28 @@ import { ProjectReq } from '../interfaces/project-req';
 import { Project } from '../models/project-model';
 import ProjectRepo from '../repositories/project-repo';
 
-const getProject = async (token: string) => {
-  return ProjectRepo.getProject(token);
-};
+class ProjectService {
+  constructor(private readonly _projectRepo: ProjectRepo) {}
 
-const getOneProject = async (token: string, id: string) => {
-  return ProjectRepo.getOneProject(token, id);
-};
+  getProject = async (user_id: string) => {
+    return this._projectRepo.getProject(user_id);
+  };
 
-const createProject = async (data: Project, token: string) => {
-  return ProjectRepo.createProject(data, token);
-};
+  getOneProject = async (user_id: string, id: string) => {
+    return this._projectRepo.getOneProject(user_id, id);
+  };
 
-const updateProject = async (token: string, data: ProjectReq, id: string) => {
-  return ProjectRepo.updateProject(token, data, id);
-};
+  createProject = async (data: Project, user_id: string) => {
+    return this._projectRepo.createProject(data, user_id);
+  };
 
-const deleteProject = async (id: string, token: string) => {
-  return ProjectRepo.deleteProject(id, token);
-};
+  updateProject = async (user_id: string, data: ProjectReq, id: string) => {
+    return this._projectRepo.updateProject(user_id, data, id);
+  };
 
-export default {
-  getProject,
-  createProject,
-  updateProject,
-  deleteProject,
-  getOneProject,
-};
+  deleteProject = async (id: string, user_id: string) => {
+    return this._projectRepo.deleteProject(id, user_id);
+  };
+}
+
+export default ProjectService;

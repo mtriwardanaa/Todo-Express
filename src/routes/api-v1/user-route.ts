@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import UserController from '../../Modules/user/controllers/user-controller';
 import authMiddleware from '../../middlewares/auth-middleware';
+import UserController from '../../Modules/user/controllers/user-controller';
 import UserService from '../../Modules/user/services/user-service';
 import UserRepo from '../../Modules/user/repositories/user-repo';
 

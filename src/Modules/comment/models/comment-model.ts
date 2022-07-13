@@ -18,6 +18,13 @@ export class Comment extends BaseEntity {
   @Column()
   comment!: string;
 
+  @CreateDateColumn()
+  created_at!: Date;
+
+  @UpdateDateColumn()
+  updated_at!: Date;
+
+  //comment to task table
   @ManyToOne(() => Task, (task) => task.comments, {
     onDelete: 'SET NULL',
   })
@@ -25,10 +32,4 @@ export class Comment extends BaseEntity {
     name: 'task_id',
   })
   task!: Task;
-
-  @CreateDateColumn()
-  created_at!: Date;
-
-  @UpdateDateColumn()
-  updated_at!: Date;
 }

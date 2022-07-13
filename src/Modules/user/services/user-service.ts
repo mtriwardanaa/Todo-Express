@@ -2,7 +2,7 @@ import { UserReq } from '../interfaces/user-req';
 import UserRepo from '../repositories/user-repo';
 import { signToken } from '../../../utils/token';
 
-export class UserService {
+class UserService {
   constructor(private readonly _userRepo: UserRepo) {}
 
   async getUser() {

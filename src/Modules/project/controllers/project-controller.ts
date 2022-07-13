@@ -1,100 +1,98 @@
 import { NextFunction, Request, Response } from 'express';
 import ProjectService from '../services/project-service';
 
-const authorize = async (req: Request) => {
-  const header = req.headers.authorization;
-  if (!header) {
-    return '';
-  }
+class ProjectController {
+  constructor(private readonly _projectService: ProjectService) {}
 
-  return header.split(' ')[1];
-};
+  authorize = async (req: Request, callback: any = 'id') => {
+    const header = req.headers.authorization;
+    if (!header) {
+      return '';
+    }
 
-const getData = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const token = await authorize(req);
-    const ampas = await ProjectService.getProject(token as unknown as string);
-    res.json({
-      status: 'success',
-      data: ampas,
-      message: 'get project success',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getOneData = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const token = await authorize(req);
-    const ampas = await ProjectService.getOneProject(
-      token as unknown as string,
-      id
+    const payload = JSON.parse(
+      Buffer.from(header.split('.')[1], 'base64').toString()
     );
-    res.json({
-      status: 'success',
-      data: ampas,
-      message: 'get one project success',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    return payload.user.id;
+  };
 
-const createData = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const token = await authorize(req);
-    const ampas = await ProjectService.createProject(
-      req.body,
-      token as unknown as string
-    );
-    res.json({
-      status: 'success',
-      data: ampas,
-      message: 'create project success',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  getData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user_id = await this.authorize(req);
+      const ampas = await this._projectService.getProject(user_id);
+      res.json({
+        status: 'success',
+        data: ampas,
+        message: 'get project success',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 
-const updateData = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const token = await authorize(req);
-    console.log('token');
-    console.log(token);
-    console.log('token');
-    const ampas = await ProjectService.updateProject(
-      token as unknown as string,
-      req.body,
-      req.params.id
-    );
-    res.json({
-      status: 'success',
-      data: ampas,
-      message: 'update project success',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  getOneData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const user_id = await this.authorize(req);
+      const ampas = await this._projectService.getOneProject(user_id, id);
+      res.json({
+        status: 'success',
+        data: ampas,
+        message: 'get one project success',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 
-const deleteData = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const token = await authorize(req);
-    const ampas = await ProjectService.deleteProject(
-      req.params.id,
-      token as unknown as string
-    );
-    res.json({
-      status: 'success',
-      data: ampas,
-      message: 'delete project success',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+  createData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user_id = await this.authorize(req);
+      const ampas = await this._projectService.createProject(req.body, user_id);
+      res.json({
+        status: 'success',
+        data: ampas,
+        message: 'create project success',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 
-export { getData, createData, updateData, deleteData, getOneData };
+  updateData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user_id = await this.authorize(req);
+      const ampas = await this._projectService.updateProject(
+        user_id,
+        req.body,
+        req.params.id
+      );
+      res.json({
+        status: 'success',
+        data: ampas,
+        message: 'update project success',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  deleteData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user_id = await this.authorize(req);
+      const ampas = await this._projectService.deleteProject(
+        req.params.id,
+        user_id
+      );
+      res.json({
+        status: 'success',
+        data: ampas,
+        message: 'delete project success',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+export default ProjectController;

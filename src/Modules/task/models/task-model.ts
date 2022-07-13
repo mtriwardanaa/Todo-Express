@@ -21,41 +21,6 @@ export class Task extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @ManyToOne(() => Project, (project) => project.tasks, {
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({
-    name: 'project_id',
-  })
-  project!: Project;
-
-  @ManyToOne(() => Task, (parent) => parent.subtasks, {
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({
-    name: 'parent_id',
-  })
-  parent!: Task;
-
-  @OneToMany(() => Task, (subtask) => subtask.parent)
-  subtasks!: Task;
-
-  @ManyToOne(() => Section, (section) => section.tasks, {
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({
-    name: 'section_id',
-  })
-  section!: Section;
-
-  @ManyToOne(() => User, (user) => user.tasks, {
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({
-    name: 'user_id',
-  })
-  user!: User;
-
   @Column()
   name!: string;
 
@@ -80,12 +45,53 @@ export class Task extends BaseEntity {
   @Column()
   order!: number;
 
-  @OneToMany(() => Comment, (comment) => comment.task)
-  comments!: Comment;
-
   @CreateDateColumn()
   created_at!: Date;
 
   @UpdateDateColumn()
   updated_at!: Date;
+
+  //task to project table
+  @ManyToOne(() => Project, (project) => project.tasks, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({
+    name: 'project_id',
+  })
+  project!: Project;
+
+  //subtask to task parent table
+  @ManyToOne(() => Task, (parent) => parent.subtasks, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({
+    name: 'parent_id',
+  })
+  parent!: Task;
+
+  //task parent to subtask table
+  @OneToMany(() => Task, (subtask) => subtask.parent)
+  subtasks!: Task;
+
+  //task to section table
+  @ManyToOne(() => Section, (section) => section.tasks, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({
+    name: 'section_id',
+  })
+  section!: Section;
+
+  //task to user table, sementara belum di pakai
+  @ManyToOne(() => User, (user) => user.tasks, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  user!: User;
+
+  //task to comment table
+  @OneToMany(() => Comment, (comment) => comment.task)
+  comments!: Comment;
 }

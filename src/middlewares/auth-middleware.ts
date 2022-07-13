@@ -1,6 +1,4 @@
 import { NextFunction, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import config from '../configs/config';
 import { checkUser } from '../utils/token';
 
 const handleAuthorizedError = (next: NextFunction) => {
@@ -16,7 +14,7 @@ interface Error {
   status?: number;
 }
 
-const validateTokenMiddleware = (
+const validateTokenMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -27,7 +25,7 @@ const validateTokenMiddleware = (
       const bearer = authHeader.split(' ')[0].toLowerCase();
       const token = authHeader.split(' ')[1];
       if (token && bearer === 'bearer') {
-        const decode = checkUser(token);
+        const decode = await checkUser(token);
         if (decode) {
           next();
         } else {
