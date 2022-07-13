@@ -9,6 +9,10 @@ class UserService {
     return this._userRepo.getUser();
   }
 
+  async getOneUser(id: string) {
+    return UserRepo.getOneUser(id);
+  }
+
   async createUser(data: UserReq) {
     return this._userRepo.createUser(data);
   }

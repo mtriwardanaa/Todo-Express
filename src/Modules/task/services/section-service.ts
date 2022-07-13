@@ -1,30 +1,29 @@
 import { SectionReq } from '../interfaces/section-req';
+import { Section } from '../models/section-model';
 import SectionRepo from '../repositories/section-repo';
 
-const getSection = async () => {
-  return SectionRepo.getSection();
-};
+class SectionService {
+  constructor(private readonly _sectionRepo: SectionRepo) {}
 
-const getOneSection = async (id: string) => {
-  return SectionRepo.getOneSection(id);
-};
+  getSection = async (projectId: string) => {
+    return this._sectionRepo.getSection(false, 'DESC', projectId);
+  };
 
-const createSection = async (data: SectionReq) => {
-  return SectionRepo.createSection(data);
-};
+  getOneSection = async (id: string) => {
+    return this._sectionRepo.getOneSection(id);
+  };
 
-const updateSection = async (data: SectionReq, id: string) => {
-  return SectionRepo.updateSection(data, id);
-};
+  createSection = async (data: Section, project_id: string) => {
+    return this._sectionRepo.createSection(data, project_id);
+  };
 
-const deleteSection = async (id: string) => {
-  return SectionRepo.deleteSection(id);
-};
+  updateSection = async (data: SectionReq, id: string) => {
+    return this._sectionRepo.updateSection(data, id);
+  };
 
-export default {
-  getSection,
-  createSection,
-  updateSection,
-  deleteSection,
-  getOneSection,
-};
+  deleteSection = async (id: string) => {
+    return this._sectionRepo.deleteSection(id);
+  };
+}
+
+export default SectionService;

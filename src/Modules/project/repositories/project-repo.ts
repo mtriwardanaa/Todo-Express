@@ -7,6 +7,7 @@ import UserRepo from '../../user/repositories/user-repo';
 
 class ProjectRepo {
   private readonly _db = AppDataSource;
+  static _db: any = AppDataSource;
 
   getProject = async (
     user_id: string,
@@ -29,21 +30,14 @@ class ProjectRepo {
     return project.getMany();
   };
 
-  getOneProject = async (
-    user_id: string,
-    id: string
-  ): Promise<ProjectRes | null> => {
-    const userId = user_id;
-    const project = await this._db
+  static async getOneProject(id: ProjectReq['id']) {
+    return this._db
       .createQueryBuilder()
       .select('project')
       .from(Project, 'project')
       .where('project.id = :projectId', { projectId: id })
-      .andWhere('project.user_id = :userId', { userId: userId })
       .getOne();
-
-    return project;
-  };
+  }
 
   searchProject = async (
     user_id: string,
@@ -93,7 +87,7 @@ class ProjectRepo {
         reorder = 1;
         const newOrder = value;
 
-        const getOne = await this.getOneProject(user_id, id);
+        const getOne = await ProjectRepo.getOneProject(id);
         const oldOrder = getOne!.order;
 
         if (newOrder > oldOrder) {

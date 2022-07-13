@@ -18,6 +18,7 @@ router.post('/login/', _userController.login);
 
 router.use(authMiddleware);
 router.get('/', _userController.getData);
+router.get('/:id', _userController.getOneData);
 router.put('/update/:id', _userController.updateData);
 router.delete('/delete/:id', _userController.deleteData);
 

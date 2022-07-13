@@ -17,6 +17,20 @@ class UserController {
     }
   };
 
+  getOneData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const ampas = await this._userService.getOneUser(id);
+      res.json({
+        status: 'success',
+        data: ampas,
+        message: 'get user success',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   createData = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const ampas = await this._userService.createUser(req.body);

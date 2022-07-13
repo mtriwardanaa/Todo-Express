@@ -9,8 +9,8 @@ class ProjectService {
     return this._projectRepo.getProject(user_id);
   };
 
-  getOneProject = async (user_id: string, id: string) => {
-    return this._projectRepo.getOneProject(user_id, id);
+  getOneProject = async (id: string) => {
+    return ProjectRepo.getOneProject(id);
   };
 
   createProject = async (data: Project, user_id: string) => {

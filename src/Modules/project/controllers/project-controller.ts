@@ -33,8 +33,7 @@ class ProjectController {
   getOneData = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const user_id = await this.authorize(req);
-      const ampas = await this._projectService.getOneProject(user_id, id);
+      const ampas = await this._projectService.getOneProject(id);
       res.json({
         status: 'success',
         data: ampas,

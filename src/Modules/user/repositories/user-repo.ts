@@ -6,7 +6,7 @@ import { checkHash, hashPass } from '../../../utils/bcrypt-pass';
 
 class UserRepo {
   private readonly _db = AppDataSource;
-  static _db: any;
+  static _db: any = AppDataSource;
 
   async getUser() {
     return this._db
@@ -17,11 +17,11 @@ class UserRepo {
   }
 
   static async getOneUser(id: UserReq['id']) {
-    return this._db
+    return UserRepo._db
       .createQueryBuilder()
       .select('user')
       .from(User, 'user')
-      .where('user.id = :userId', { UserId: id })
+      .where('user.id = :userId', { userId: id })
       .getOne();
   }
 
