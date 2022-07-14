@@ -21,6 +21,24 @@ export class Task extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Column({
+    nullable: true,
+  })
+  parent_id!: string;
+
+  @Column()
+  project_id!: string;
+
+  @Column({
+    nullable: true,
+  })
+  section_id!: string;
+
+  @Column({
+    nullable: true,
+  })
+  user_id!: string;
+
   @Column()
   name!: string;
 

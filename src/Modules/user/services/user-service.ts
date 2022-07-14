@@ -31,7 +31,7 @@ class UserService {
       return false;
     }
 
-    const token = signToken(check);
+    const token = await signToken(check);
     return {
       ...check,
       token: token,

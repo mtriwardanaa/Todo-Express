@@ -18,6 +18,9 @@ export class Section extends BaseEntity {
   id!: string;
 
   @Column()
+  project_id!: string;
+
+  @Column()
   name!: string;
 
   @Column()

@@ -29,15 +29,13 @@ class SectionRepo {
     return section.getMany();
   };
 
-  getOneSection = async (id: string): Promise<Section | null> => {
-    const section = await this._db
+  getOneSection = async (id: string) => {
+    return this._db
       .createQueryBuilder()
       .select('section')
       .from(Section, 'section')
       .where('section.id = :sectionId', { sectionId: id })
       .getOne();
-
-    return section;
   };
 
   searchSection = async (
@@ -85,6 +83,7 @@ class SectionRepo {
     let reorder = 0;
     let sort = 'DESC';
     const getOne = await this.getOneSection(id);
+    console.log(getOne);
     Object.entries(data).forEach(async ([key, value], index) => {
       if (key === 'order') {
         reorder = 1;

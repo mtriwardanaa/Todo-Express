@@ -19,6 +19,9 @@ export class Project extends BaseEntity {
   id!: string;
 
   @Column()
+  user_id!: string;
+
+  @Column()
   name!: string;
 
   @Column()

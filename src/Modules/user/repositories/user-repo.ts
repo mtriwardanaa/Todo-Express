@@ -25,6 +25,15 @@ class UserRepo {
       .getOne();
   }
 
+  async getOneUserByUsername(username: UserReq['username']) {
+    return UserRepo._db
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user')
+      .where('user.username = :username', { username: username })
+      .getOne();
+  }
+
   async searchUser(params: UserSearch, one: boolean) {
     const user = this._db
       .createQueryBuilder()
@@ -63,13 +72,7 @@ class UserRepo {
   }
 
   async authUser(username: UserReq['username'], password: UserReq['password']) {
-    const check = await this._db
-      .createQueryBuilder()
-      .select('user')
-      .from(User, 'user')
-      .where('user.username = :username', { username: username })
-      .getOne();
-
+    const check = await this.getOneUserByUsername(username);
     if (!check) {
       return null;
     }

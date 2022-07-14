@@ -16,6 +16,9 @@ export class Comment extends BaseEntity {
   id!: string;
 
   @Column()
+  task_id!: string;
+
+  @Column()
   comment!: string;
 
   @CreateDateColumn()
