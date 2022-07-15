@@ -6,10 +6,10 @@ class UserController {
 
   getData = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ampas = await this._userService.getUser();
+      const data = await this._userService.getUser();
       res.json({
         status: 'success',
-        data: ampas,
+        data,
         message: 'get user success',
       });
     } catch (error) {
@@ -20,11 +20,17 @@ class UserController {
   getOneData = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const ampas = await this._userService.getOneUser(id);
+      const data = await this._userService.getOneUser(id);
+      if (data != null) {
+        res.json({
+          status: 'success',
+          data,
+          message: 'get user success',
+        });
+      }
       res.json({
-        status: 'success',
-        data: ampas,
-        message: 'get user success',
+        status: 'fail',
+        message: 'user not found',
       });
     } catch (error) {
       next(error);
@@ -33,10 +39,10 @@ class UserController {
 
   createData = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ampas = await this._userService.createUser(req.body);
+      const data = await this._userService.createUser(req.body);
       res.json({
         status: 'success',
-        data: ampas,
+        data,
         message: 'create user success',
       });
     } catch (error) {
@@ -46,11 +52,20 @@ class UserController {
 
   updateData = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ampas = await this._userService.updateUser(req.body, req.params.id);
+      const update = await this._userService.updateUser(
+        req.body,
+        req.params.id
+      );
+      if (update.status) {
+        res.json({
+          status: 'success',
+          data: update.data,
+          message: 'update user success',
+        });
+      }
       res.json({
-        status: 'success',
-        data: ampas,
-        message: 'update user success',
+        status: 'fail',
+        message: update.message,
       });
     } catch (error) {
       next(error);
@@ -59,11 +74,17 @@ class UserController {
 
   deleteData = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ampas = await this._userService.deleteUser(req.params.id);
+      const deleteUser = await this._userService.deleteUser(req.params.id);
+      if (deleteUser.status) {
+        res.json({
+          status: 'success',
+          data: deleteUser.data,
+          message: 'delete user success',
+        });
+      }
       res.json({
-        status: 'success',
-        data: ampas,
-        message: 'delete user success',
+        status: 'fail',
+        message: deleteUser.message,
       });
     } catch (error) {
       next(error);
@@ -73,10 +94,18 @@ class UserController {
   login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { username, password } = req.body;
-      const ampas = await this._userService.login(username, password);
+      const data = await this._userService.login(username, password);
+      console.log(data);
+      if (!data.status) {
+        res.json({
+          status: 'fail',
+          message: data.message,
+        });
+      }
+
       res.json({
         status: 'success',
-        data: ampas,
+        data,
         message: 'login user success',
       });
     } catch (error) {

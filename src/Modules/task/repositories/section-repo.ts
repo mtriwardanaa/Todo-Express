@@ -1,19 +1,13 @@
 import AppDataSource from '../../../configs/connect';
-import { DeleteResult, UpdateResult } from 'typeorm';
 import { SectionReq } from '../interfaces/section-req';
 import { SectionRes } from '../interfaces/section-res';
 import { Section } from '../models/section-model';
-import ProjectRepo from '../../project/repositories/project-repo';
 
 class SectionRepo {
   private readonly _db = AppDataSource;
   static _db: any = AppDataSource;
 
-  getSection = async (
-    count: boolean = false,
-    sort: string = 'DESC',
-    projectId: string
-  ): Promise<SectionRes[] | number | null> => {
+  getSection = async (sort: string = 'DESC', projectId: string) => {
     const section = this._db
       .createQueryBuilder()
       .select('section')
@@ -22,11 +16,19 @@ class SectionRepo {
       .orderBy('section.order', 'ASC')
       .addOrderBy('section.updated_at', sort as any);
 
-    if (count) {
-      return section.getCount();
-    }
-
     return section.getMany();
+  };
+
+  countSection = async (
+    projectId: string
+  ): Promise<SectionRes[] | number | null> => {
+    const section = this._db
+      .createQueryBuilder()
+      .select('section')
+      .from(Section, 'section')
+      .where('section.project_id = :projectId', { projectId: projectId });
+
+    return section.getCount();
   };
 
   getOneSection = async (id: string) => {
@@ -60,12 +62,11 @@ class SectionRepo {
 
   createSection = async (
     data: Section,
-    project_id: string
+    projectId: string
   ): Promise<SectionRes> => {
     data.order =
-      ((await this.getSection(true, 'DESC', project_id)) as unknown as number) +
-      1;
-    data.project = await ProjectRepo.getOneProject(project_id);
+      ((await this.countSection(projectId)) as unknown as number) + 1;
+    data.project_id = projectId;
     const create = await this._db
       .createQueryBuilder()
       .insert()
@@ -78,18 +79,17 @@ class SectionRepo {
 
   updateSection = async (
     data: SectionReq,
-    id: string
-  ): Promise<UpdateResult> => {
+    id: string,
+    sectionData: Section
+  ) => {
     let reorder = 0;
     let sort = 'DESC';
-    const getOne = await this.getOneSection(id);
-    console.log(getOne);
     Object.entries(data).forEach(async ([key, value], index) => {
       if (key === 'order') {
         reorder = 1;
         const newOrder = value;
 
-        const oldOrder = getOne!.order;
+        const oldOrder = sectionData.order;
 
         if (newOrder > oldOrder) {
           sort = 'ASC';
@@ -107,17 +107,16 @@ class SectionRepo {
       .execute();
 
     if (reorder === 1) {
-      await this.reorderSection(sort, getOne!.project.id);
+      await this.reorderSection(sort, sectionData.project_id);
     }
 
     return section;
   };
 
-  deleteSection = async (id: string): Promise<DeleteResult> => {
-    const getOne = await this.getOneSection(id);
+  deleteSection = async (id: string, projectId: string) => {
     const deleteSection = await Section.delete(id);
 
-    await this.reorderSection('DESC', getOne!.project.id);
+    await this.reorderSection('DESC', projectId);
 
     return deleteSection;
   };
@@ -126,15 +125,14 @@ class SectionRepo {
     sort: string = 'DESC',
     projectId: string
   ): Promise<boolean | void> => {
-    const section: any = await this.getSection(false, sort, projectId);
-
+    const section: any = await this.getSection(sort, projectId);
     if (section) {
       section.forEach(async (value: any, index: any) => {
         await this._db
           .createQueryBuilder()
           .update('section')
           .set({ order: index + 1 })
-          .where('section.id = :sectionId', { sectionId: value.id })
+          .where('id = :sectionId', { sectionId: value.id })
           .execute();
       });
     }

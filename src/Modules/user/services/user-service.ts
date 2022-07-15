@@ -18,21 +18,55 @@ class UserService {
   }
 
   async updateUser(data: UserReq, id: UserReq['id']) {
-    return this._userRepo.updateUser(data, id);
+    const checkUser = await UserRepo.getOneUser(id);
+    if (!checkUser) {
+      return {
+        status: false,
+        message: 'user not found',
+      };
+    }
+
+    const update = await this._userRepo.updateUser(data, id);
+    return {
+      status: true,
+      data: update,
+    };
   }
 
   async deleteUser(id: UserReq['id']) {
-    return this._userRepo.deleteUser(id);
+    const checkUser = await UserRepo.getOneUser(id);
+    if (!checkUser) {
+      return {
+        status: false,
+        message: 'user not found',
+      };
+    }
+
+    const deleteUser = await this._userRepo.deleteUser(id);
+    return {
+      status: true,
+      data: deleteUser,
+    };
   }
 
   async login(username: UserReq['username'], password: UserReq['password']) {
     const check = await this._userRepo.authUser(username, password);
     if (!check) {
-      return false;
+      return {
+        status: false,
+        message: 'User not found',
+      };
     }
 
     const token = await signToken(check);
+    if (!token) {
+      return {
+        status: false,
+        message: 'Token failed',
+      };
+    }
     return {
+      status: true,
       ...check,
       token: token,
     };

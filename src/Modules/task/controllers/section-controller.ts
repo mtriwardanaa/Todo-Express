@@ -7,11 +7,17 @@ class SectionController {
   getData = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { projectId } = req.params;
-      const ampas = await this._sectionService.getSection(projectId);
+      const list = await this._sectionService.getSection(projectId);
+      if (list.status) {
+        res.json({
+          status: 'success',
+          data: list.data,
+          message: 'get section success',
+        });
+      }
       res.json({
-        status: 'success',
-        data: ampas,
-        message: 'get section success',
+        status: 'fail',
+        message: list.message,
       });
     } catch (error) {
       next(error);
@@ -21,11 +27,17 @@ class SectionController {
   getOneData = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const ampas = await this._sectionService.getOneSection(id);
+      const check = await this._sectionService.getOneSection(id);
+      if (check != null) {
+        res.json({
+          status: 'success',
+          data: check,
+          message: 'get one section success',
+        });
+      }
       res.json({
-        status: 'success',
-        data: ampas,
-        message: 'get one section success',
+        status: 'fail',
+        message: 'section not found',
       });
     } catch (error) {
       next(error);
@@ -35,14 +47,21 @@ class SectionController {
   createData = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { projectId } = req.params;
-      const ampas = await this._sectionService.createSection(
+      const create = await this._sectionService.createSection(
         req.body,
         projectId
       );
+
+      if (create.status) {
+        res.json({
+          status: 'success',
+          create,
+          message: 'create section success',
+        });
+      }
       res.json({
-        status: 'success',
-        data: ampas,
-        message: 'create section success',
+        status: 'fail',
+        message: create.message,
       });
     } catch (error) {
       next(error);
@@ -51,14 +70,20 @@ class SectionController {
 
   updateData = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ampas = await this._sectionService.updateSection(
+      const update = await this._sectionService.updateSection(
         req.body,
         req.params.id
       );
+      if (update.status) {
+        res.json({
+          status: 'success',
+          update,
+          message: 'update section success',
+        });
+      }
       res.json({
-        status: 'success',
-        data: ampas,
-        message: 'update section success',
+        status: 'fail',
+        message: update.message,
       });
     } catch (error) {
       next(error);
@@ -67,11 +92,18 @@ class SectionController {
 
   deleteData = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ampas = await this._sectionService.deleteSection(req.params.id);
+      const deleteSec = await this._sectionService.deleteSection(req.params.id);
+      if (deleteSec.status) {
+        res.json({
+          status: 'success',
+          deleteSec,
+          message: 'delete section success',
+        });
+      }
+
       res.json({
-        status: 'success',
-        data: ampas,
-        message: 'delete section success',
+        status: 'fail',
+        message: deleteSec.message,
       });
     } catch (error) {
       next(error);

@@ -9,25 +9,26 @@ class ProjectRepo {
   private readonly _db = AppDataSource;
   static _db: any = AppDataSource;
 
-  getProject = async (
-    user_id: string,
-    count: boolean = false,
-    sort: string = 'DESC'
-  ): Promise<ProjectRes[] | number | null> => {
-    const userId = user_id;
+  getProject = async (userId: string, sort: string = 'DESC') => {
     const project = this._db
       .createQueryBuilder()
       .select('project')
       .from(Project, 'project')
-      .where('project.user_id = :userId', { userId: userId })
+      .where('project.userId = :userId', { userId: userId })
       .orderBy('project.order', 'ASC')
       .addOrderBy('project.updated_at', sort as any);
 
-    if (count) {
-      return project.getCount();
-    }
-
     return project.getMany();
+  };
+
+  countProject = async (userId: string): Promise<number> => {
+    const project = this._db
+      .createQueryBuilder()
+      .select('project')
+      .from(Project, 'project')
+      .where('project.userId = :userId', { userId: userId });
+
+    return project.getCount();
   };
 
   static async getOneProject(id: ProjectReq['id']) {
@@ -40,16 +41,15 @@ class ProjectRepo {
   }
 
   searchProject = async (
-    user_id: string,
+    userId: string,
     params: ProjectReq,
     one: boolean
   ): Promise<ProjectRes[] | ProjectRes | null> => {
-    const userId = user_id;
     const project = this._db
       .createQueryBuilder()
       .select('project')
       .from(Project, 'project')
-      .where('project.user_id = :userId', { userId: userId });
+      .where('project.userId = :userId', { userId: userId });
 
     Object.entries(params).forEach(([key, value], index) => {
       project.andWhere(`project.${key} = :param`, { param: value });
@@ -60,11 +60,9 @@ class ProjectRepo {
 
   createProject = async (
     data: Project,
-    user_id: string
+    userId: string
   ): Promise<ProjectRes> => {
-    data.order =
-      ((await this.getProject(user_id, true)) as unknown as number) + 1;
-    data.user = await UserRepo.getOneUser(user_id);
+    data.order = ((await this.countProject(userId)) as unknown as number) + 1;
     const create = await this._db
       .createQueryBuilder()
       .insert()
@@ -76,9 +74,9 @@ class ProjectRepo {
   };
 
   updateProject = async (
-    user_id: string,
+    userId: string,
     data: ProjectReq,
-    id: string
+    dataProject: Project
   ): Promise<UpdateResult> => {
     let reorder = 0;
     let sort = 'DESC';
@@ -87,8 +85,7 @@ class ProjectRepo {
         reorder = 1;
         const newOrder = value;
 
-        const getOne = await ProjectRepo.getOneProject(id);
-        const oldOrder = getOne!.order;
+        const oldOrder = dataProject.order;
 
         if (newOrder > oldOrder) {
           sort = 'ASC';
@@ -102,32 +99,29 @@ class ProjectRepo {
       .createQueryBuilder()
       .update('project')
       .set(data)
-      .where('project.id = :projectId', { projectId: id })
+      .where('project.id = :projectId', { projectId: dataProject.id })
       .execute();
 
     if (reorder === 1) {
-      await this.reorderProject(user_id, sort);
+      await this.reorderProject(userId, sort);
     }
 
     return project;
   };
 
-  deleteProject = async (
-    id: string,
-    user_id: string
-  ): Promise<DeleteResult> => {
+  deleteProject = async (id: string, userId: string): Promise<DeleteResult> => {
     const deleteProject = await Project.delete(id);
 
-    await this.reorderProject(user_id);
+    await this.reorderProject(userId);
 
     return deleteProject;
   };
 
   reorderProject = async (
-    user_id: string,
+    userId: string,
     sort: string = 'DESC'
   ): Promise<boolean | void> => {
-    const project: any = await this.getProject(user_id, false, sort);
+    const project: any = await this.getProject(userId, sort);
 
     if (project) {
       project.forEach(async (value: any, index: any) => {
