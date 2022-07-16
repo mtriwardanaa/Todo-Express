@@ -19,9 +19,7 @@ class TaskRepo {
     return section.getMany();
   };
 
-  countSection = async (
-    projectId: string
-  ): Promise<SectionRes[] | number | null> => {
+  countSection = async (projectId: string) => {
     const section = this._db
       .createQueryBuilder()
       .select('section')
@@ -40,10 +38,7 @@ class TaskRepo {
       .getOne();
   };
 
-  searchSection = async (
-    params: SectionReq,
-    one: boolean
-  ): Promise<SectionRes[] | SectionRes | null> => {
+  searchSection = async (params: SectionReq, one: boolean) => {
     const section = this._db
       .createQueryBuilder()
       .select('section')
@@ -60,10 +55,7 @@ class TaskRepo {
     return one ? section.getOne() : section.getMany();
   };
 
-  createSection = async (
-    data: Section,
-    projectId: string
-  ): Promise<SectionRes> => {
+  createSection = async (data: Section, projectId: string) => {
     data.order =
       ((await this.countSection(projectId)) as unknown as number) + 1;
     data.project_id = projectId;
@@ -121,10 +113,7 @@ class TaskRepo {
     return deleteSection;
   };
 
-  reorderSection = async (
-    sort: string = 'DESC',
-    projectId: string
-  ): Promise<boolean | void> => {
+  reorderSection = async (sort: string = 'DESC', projectId: string) => {
     const section: any = await this.getSection(sort, projectId);
     if (section) {
       section.forEach(async (value: any, index: any) => {

@@ -1,7 +1,5 @@
 import AppDataSource from '../../../configs/connect';
-import { DeleteResult, UpdateResult } from 'typeorm';
 import { ProjectReq } from '../interfaces/project-req';
-import { ProjectRes } from '../interfaces/project-res';
 import { Project } from '../models/project-model';
 
 class ProjectRepo {
@@ -20,7 +18,7 @@ class ProjectRepo {
     return project.getMany();
   };
 
-  countProject = async (userId: string): Promise<number> => {
+  countProject = async (userId: string) => {
     const project = this._db
       .createQueryBuilder()
       .select('project')
@@ -39,11 +37,7 @@ class ProjectRepo {
       .getOne();
   }
 
-  searchProject = async (
-    userId: string,
-    params: ProjectReq,
-    one: boolean
-  ): Promise<ProjectRes[] | ProjectRes | null> => {
+  searchProject = async (userId: string, params: ProjectReq, one: boolean) => {
     const project = this._db
       .createQueryBuilder()
       .select('project')
@@ -57,10 +51,7 @@ class ProjectRepo {
     return one ? project.getOne() : project.getMany();
   };
 
-  createProject = async (
-    data: Project,
-    userId: string
-  ): Promise<ProjectRes> => {
+  createProject = async (data: Project, userId: string) => {
     data.order = ((await this.countProject(userId)) as unknown as number) + 1;
     const create = await this._db
       .createQueryBuilder()
@@ -76,7 +67,7 @@ class ProjectRepo {
     userId: string,
     data: ProjectReq,
     dataProject: Project
-  ): Promise<UpdateResult> => {
+  ) => {
     let reorder = 0;
     let sort = 'DESC';
     Object.entries(data).forEach(async ([key, value], index) => {
@@ -108,7 +99,7 @@ class ProjectRepo {
     return project;
   };
 
-  deleteProject = async (id: string, userId: string): Promise<DeleteResult> => {
+  deleteProject = async (id: string, userId: string) => {
     const deleteProject = await Project.delete(id);
     console.log(deleteProject);
     await this.reorderProject(userId);
@@ -116,10 +107,7 @@ class ProjectRepo {
     return deleteProject;
   };
 
-  reorderProject = async (
-    userId: string,
-    sort: string = 'DESC'
-  ): Promise<boolean | void> => {
+  reorderProject = async (userId: string, sort: string = 'DESC') => {
     const project: any = await this.getProject(userId, sort);
 
     if (project) {
