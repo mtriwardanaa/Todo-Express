@@ -27,11 +27,12 @@ class UserController {
           data,
           message: 'get user success',
         });
+      } else {
+        res.json({
+          status: 'fail',
+          message: 'user not found',
+        });
       }
-      res.json({
-        status: 'fail',
-        message: 'user not found',
-      });
     } catch (error) {
       next(error);
     }
@@ -62,11 +63,12 @@ class UserController {
           data: update.data,
           message: 'update user success',
         });
+      } else {
+        res.json({
+          status: 'fail',
+          message: update.message,
+        });
       }
-      res.json({
-        status: 'fail',
-        message: update.message,
-      });
     } catch (error) {
       next(error);
     }
@@ -81,11 +83,12 @@ class UserController {
           data: deleteUser.data,
           message: 'delete user success',
         });
+      } else {
+        res.json({
+          status: 'fail',
+          message: deleteUser.message,
+        });
       }
-      res.json({
-        status: 'fail',
-        message: deleteUser.message,
-      });
     } catch (error) {
       next(error);
     }
@@ -101,13 +104,13 @@ class UserController {
           status: 'fail',
           message: data.message,
         });
+      } else {
+        res.json({
+          status: 'success',
+          data,
+          message: 'login user success',
+        });
       }
-
-      res.json({
-        status: 'success',
-        data,
-        message: 'login user success',
-      });
     } catch (error) {
       next(error);
     }

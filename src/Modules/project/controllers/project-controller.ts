@@ -26,11 +26,12 @@ class ProjectController {
           data: list.data,
           message: 'get project success',
         });
+      } else {
+        res.json({
+          status: 'fail',
+          message: list.message,
+        });
       }
-      res.json({
-        status: 'fail',
-        message: list.message,
-      });
     } catch (error) {
       next(error);
     }
@@ -46,12 +47,12 @@ class ProjectController {
           data: get,
           message: 'get one project success',
         });
+      } else {
+        res.json({
+          status: 'fail',
+          message: 'project not found',
+        });
       }
-
-      res.json({
-        status: 'fail',
-        message: 'project not found',
-      });
     } catch (error) {
       next(error);
     }
@@ -67,11 +68,12 @@ class ProjectController {
           data: create.data,
           message: 'create project success',
         });
+      } else {
+        res.json({
+          status: 'fail',
+          message: create.message,
+        });
       }
-      res.json({
-        status: 'fail',
-        message: create.message,
-      });
     } catch (error) {
       next(error);
     }
@@ -91,11 +93,12 @@ class ProjectController {
           data: update.data,
           message: 'update project success',
         });
+      } else {
+        res.json({
+          status: 'fail',
+          message: update.message,
+        });
       }
-      res.json({
-        status: 'fail',
-        message: update.message,
-      });
     } catch (error) {
       next(error);
     }

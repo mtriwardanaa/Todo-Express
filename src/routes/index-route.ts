@@ -3,6 +3,7 @@ import TodoRoutes from '../routes/api-v1/todo-route';
 import UserRoutes from '../routes/api-v1/user-route';
 import ProjectRoutes from '../routes/api-v1/project-route';
 import SectionRoutes from '../routes/api-v1/section-route';
+import TaskRoutes from '../routes/api-v1/task-route';
 import authMiddleware from '../middlewares/auth-middleware';
 
 const router = Router();
@@ -17,5 +18,6 @@ router.use('/user', UserRoutes);
 router.use(authMiddleware);
 router.use('/project', ProjectRoutes);
 router.use('/section', SectionRoutes);
+router.use('/task', TaskRoutes);
 
 export default router;

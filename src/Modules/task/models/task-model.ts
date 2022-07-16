@@ -45,7 +45,9 @@ export class Task extends BaseEntity {
   @Column()
   desc!: string;
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   due_date!: Date;
 
   @Column({

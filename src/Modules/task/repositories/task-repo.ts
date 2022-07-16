@@ -1,79 +1,72 @@
 import AppDataSource from '../../../configs/connect';
-import { SectionReq } from '../interfaces/section-req';
-import { SectionRes } from '../interfaces/section-res';
-import { Section } from '../models/section-model';
+import { TaskReq } from '../interfaces/task-req';
+import { Task } from '../models/task-model';
 
 class TaskRepo {
   private readonly _db = AppDataSource;
   static _db: any = AppDataSource;
 
-  getSection = async (sort: string = 'DESC', projectId: string) => {
-    const section = this._db
-      .createQueryBuilder()
-      .select('section')
-      .from(Section, 'section')
-      .where('section.project_id = :projectId', { projectId: projectId })
-      .orderBy('section.order', 'ASC')
-      .addOrderBy('section.updated_at', sort as any);
-
-    return section.getMany();
+  getTask = async (sort: string = 'DESC', projectId: string) => {
+    return this._db
+      .getRepository(Task)
+      .createQueryBuilder('task')
+      .leftJoinAndSelect('task.section', 'section')
+      .where('task.project_id = :projectId', { projectId: projectId })
+      .orderBy('task.order', 'ASC')
+      .addOrderBy('task.updated_at', sort as any)
+      .getMany();
   };
 
-  countSection = async (projectId: string) => {
-    const section = this._db
+  countTask = async (projectId: string) => {
+    const task = this._db
       .createQueryBuilder()
-      .select('section')
-      .from(Section, 'section')
-      .where('section.project_id = :projectId', { projectId: projectId });
+      .select('task')
+      .from(Task, 'task')
+      .where('task.project_id = :projectId', { projectId: projectId });
 
-    return section.getCount();
+    return task.getCount();
   };
 
-  getOneSection = async (id: string) => {
+  getOneTask = async (id: string) => {
     return this._db
       .createQueryBuilder()
-      .select('section')
-      .from(Section, 'section')
-      .where('section.id = :sectionId', { sectionId: id })
+      .select('task')
+      .from(Task, 'task')
+      .where('task.id = :taskId', { taskId: id })
       .getOne();
   };
 
-  searchSection = async (params: SectionReq, one: boolean) => {
-    const section = this._db
+  searchTask = async (params: TaskReq, one: boolean) => {
+    const task = this._db
       .createQueryBuilder()
-      .select('section')
-      .from(Section, 'section');
+      .select('task')
+      .from(Task, 'task');
 
     Object.entries(params).forEach(([key, value], index) => {
       if (index === 0) {
-        section.where(`section.${key} = :param`, { param: 'ampas' });
+        task.where(`task.${key} = :param`, { param: 'ampas' });
       } else {
-        section.andWhere(`section.${key} = :param`, { param: value });
+        task.andWhere(`task.${key} = :param`, { param: value });
       }
     });
 
-    return one ? section.getOne() : section.getMany();
+    return one ? task.getOne() : task.getMany();
   };
 
-  createSection = async (data: Section, projectId: string) => {
-    data.order =
-      ((await this.countSection(projectId)) as unknown as number) + 1;
+  createTask = async (data: Task, projectId: string) => {
+    data.order = ((await this.countTask(projectId)) as unknown as number) + 1;
     data.project_id = projectId;
     const create = await this._db
       .createQueryBuilder()
       .insert()
-      .into(Section)
+      .into(Task)
       .values(data)
       .execute();
 
     return create.raw[0];
   };
 
-  updateSection = async (
-    data: SectionReq,
-    id: string,
-    sectionData: Section
-  ) => {
+  updateTask = async (data: TaskReq, id: string, taskData: Task) => {
     let reorder = 0;
     let sort = 'DESC';
     Object.entries(data).forEach(async ([key, value], index) => {
@@ -81,7 +74,7 @@ class TaskRepo {
         reorder = 1;
         const newOrder = value;
 
-        const oldOrder = sectionData.order;
+        const oldOrder = taskData.order;
 
         if (newOrder > oldOrder) {
           sort = 'ASC';
@@ -91,37 +84,37 @@ class TaskRepo {
       }
     });
 
-    const section = await this._db
+    const task = await this._db
       .createQueryBuilder()
-      .update('section')
+      .update('task')
       .set(data)
-      .where('section.id = :sectionId', { sectionId: id })
+      .where('task.id = :taskId', { taskId: id })
       .execute();
 
     if (reorder === 1) {
-      await this.reorderSection(sort, sectionData.project_id);
+      await this.reorderTask(sort, taskData.project_id);
     }
 
-    return section;
+    return task;
   };
 
-  deleteSection = async (id: string, projectId: string) => {
-    const deleteSection = await Section.delete(id);
+  deleteTask = async (id: string, projectId: string) => {
+    const deleteTask = await Task.delete(id);
 
-    await this.reorderSection('DESC', projectId);
+    await this.reorderTask('DESC', projectId);
 
-    return deleteSection;
+    return deleteTask;
   };
 
-  reorderSection = async (sort: string = 'DESC', projectId: string) => {
-    const section: any = await this.getSection(sort, projectId);
-    if (section) {
-      section.forEach(async (value: any, index: any) => {
+  reorderTask = async (sort: string = 'DESC', projectId: string) => {
+    const task: any = await this.getTask(sort, projectId);
+    if (task) {
+      task.forEach(async (value: any, index: any) => {
         await this._db
           .createQueryBuilder()
-          .update('section')
+          .update('task')
           .set({ order: index + 1 })
-          .where('id = :sectionId', { sectionId: value.id })
+          .where('id = :taskId', { taskId: value.id })
           .execute();
       });
     }

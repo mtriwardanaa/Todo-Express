@@ -11,7 +11,6 @@ class SectionService {
     if (checkData == null) {
       return {
         status: false,
-        data: [],
         message: 'project not found',
       };
     }
