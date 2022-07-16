@@ -1,7 +1,12 @@
 import ProjectRepo from '../../project/repositories/project-repo';
+import { SectionRes } from '../interfaces/section-res';
 import { TaskReq } from '../interfaces/task-req';
 import { Task } from '../models/task-model';
 import TaskRepo from '../repositories/task-repo';
+
+interface NameInterface {
+  [key: string]: Task[];
+}
 
 class TaskService {
   constructor(private readonly _taskRepo: TaskRepo) {}
@@ -22,7 +27,7 @@ class TaskService {
     console.log(sect);
     return {
       status: true,
-      data: subtask,
+      data: sect,
     };
   };
 
@@ -38,19 +43,15 @@ class TaskService {
   };
 
   generateSection = async (arr: Task[], section_id = null) => {
-    let data: any[] = [];
-    arr.forEach(async (value: any, index: any) => {
-      var key: any = 'ampas';
+    return arr.reduce((group: NameInterface, value) => {
+      let ampas = 'ampas';
       if (value.section_id != null) {
-        key = value.section.name;
+        ampas = value.section.name;
       }
-
-      var obj = [];
-      obj[key] = value;
-      data.push(obj);
-    });
-
-    return data;
+      group[ampas] = group[ampas] ?? [];
+      group[ampas].push(value);
+      return group;
+    }, {});
   };
 
   getOneTask = async (id: string) => {
