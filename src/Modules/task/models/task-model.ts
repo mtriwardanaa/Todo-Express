@@ -71,7 +71,7 @@ export class Task extends BaseEntity {
 
   //task to project table
   @ManyToOne(() => Project, (project) => project.tasks, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({
     name: 'project_id',
@@ -80,7 +80,7 @@ export class Task extends BaseEntity {
 
   //subtask to task parent table
   @ManyToOne(() => Task, (parent) => parent.subtasks, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({
     name: 'parent_id',
@@ -102,7 +102,7 @@ export class Task extends BaseEntity {
 
   //task to user table, sementara belum di pakai
   @ManyToOne(() => User, (user) => user.tasks, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({
     name: 'user_id',

@@ -56,7 +56,7 @@ export class Project extends BaseEntity {
 
   //project to user table
   @ManyToOne(() => User, (user) => user.projects, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({
     name: 'user_id',

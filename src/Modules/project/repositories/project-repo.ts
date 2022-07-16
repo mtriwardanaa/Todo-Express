@@ -3,7 +3,6 @@ import { DeleteResult, UpdateResult } from 'typeorm';
 import { ProjectReq } from '../interfaces/project-req';
 import { ProjectRes } from '../interfaces/project-res';
 import { Project } from '../models/project-model';
-import UserRepo from '../../user/repositories/user-repo';
 
 class ProjectRepo {
   private readonly _db = AppDataSource;
@@ -14,7 +13,7 @@ class ProjectRepo {
       .createQueryBuilder()
       .select('project')
       .from(Project, 'project')
-      .where('project.userId = :userId', { userId: userId })
+      .where('project.user_id = :userId', { userId: userId })
       .orderBy('project.order', 'ASC')
       .addOrderBy('project.updated_at', sort as any);
 
@@ -26,7 +25,7 @@ class ProjectRepo {
       .createQueryBuilder()
       .select('project')
       .from(Project, 'project')
-      .where('project.userId = :userId', { userId: userId });
+      .where('project.user_id = :userId', { userId: userId });
 
     return project.getCount();
   };
@@ -49,7 +48,7 @@ class ProjectRepo {
       .createQueryBuilder()
       .select('project')
       .from(Project, 'project')
-      .where('project.userId = :userId', { userId: userId });
+      .where('project.user_id = :userId', { userId: userId });
 
     Object.entries(params).forEach(([key, value], index) => {
       project.andWhere(`project.${key} = :param`, { param: value });
@@ -111,7 +110,7 @@ class ProjectRepo {
 
   deleteProject = async (id: string, userId: string): Promise<DeleteResult> => {
     const deleteProject = await Project.delete(id);
-
+    console.log(deleteProject);
     await this.reorderProject(userId);
 
     return deleteProject;

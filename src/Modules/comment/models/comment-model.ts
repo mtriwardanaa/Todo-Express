@@ -29,7 +29,7 @@ export class Comment extends BaseEntity {
 
   //comment to task table
   @ManyToOne(() => Task, (task) => task.comments, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({
     name: 'task_id',

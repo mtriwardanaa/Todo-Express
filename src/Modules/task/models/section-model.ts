@@ -38,7 +38,7 @@ export class Section extends BaseEntity {
 
   //section to project table
   @ManyToOne(() => Project, (project) => project.sections, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinColumn({
     name: 'project_id',

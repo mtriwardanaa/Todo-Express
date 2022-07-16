@@ -73,6 +73,7 @@ class ProjectService {
 
   deleteProject = async (id: string, userId: string) => {
     const checkUser = await UserRepo.getOneUser(userId);
+    console.log(checkUser);
     if (!checkUser) {
       return {
         status: false,
