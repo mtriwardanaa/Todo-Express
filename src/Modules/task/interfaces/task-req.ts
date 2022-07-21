@@ -5,11 +5,12 @@ export interface TaskReq {
   parent_id?: string;
   project_id?: string;
   section_id?: string;
+  new_section_id?: string;
   user_id?: string;
   name: string;
   desc: string;
   due_date: Date;
   priority: Priority;
   compeleted: boolean;
-  order: number;
+  order: string;
 }

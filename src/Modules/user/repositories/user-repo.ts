@@ -52,7 +52,6 @@ class UserRepo {
   }
 
   async createUser(data: UserReq) {
-    data.password = hashPass(data.password as string);
     const create = User.create(data);
 
     return create.save();

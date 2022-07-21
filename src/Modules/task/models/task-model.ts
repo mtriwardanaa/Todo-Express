@@ -63,7 +63,7 @@ export class Task extends BaseEntity {
   compeleted!: boolean;
 
   @Column()
-  order!: number;
+  order!: string;
 
   @CreateDateColumn()
   created_at!: Date;

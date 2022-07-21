@@ -6,7 +6,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  BeforeInsert,
 } from 'typeorm';
+import { hashPass } from '../../../utils/bcrypt-pass';
 import { Project } from '../../project/models/project-model';
 import { Task } from '../../task/models/task-model';
 
@@ -43,4 +45,9 @@ export class User extends BaseEntity {
   //user to project table
   @OneToMany(() => Project, (project) => project.user)
   projects!: Project;
+
+  @BeforeInsert()
+  bycriptPass() {
+    this.password = hashPass(this.password);
+  }
 }

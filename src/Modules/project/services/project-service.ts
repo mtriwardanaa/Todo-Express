@@ -1,3 +1,4 @@
+import { checkNull } from '../../../utils/helper';
 import UserRepo from '../../user/repositories/user-repo';
 import { ProjectReq } from '../interfaces/project-req';
 import { Project } from '../models/project-model';
@@ -35,7 +36,18 @@ class ProjectService {
       };
     }
 
-    const create = await this._projectRepo.createProject(data, userId);
+    data.order =
+      ((await this._projectRepo.countProject(userId)) as unknown as number) + 1;
+    data.user_id = userId;
+
+    const create = await this._projectRepo.createProject(data);
+    if (checkNull(create)) {
+      return {
+        status: false,
+        message: 'create project failed',
+      };
+    }
+
     return {
       status: true,
       data: create,
@@ -59,11 +71,34 @@ class ProjectService {
       };
     }
 
-    const update = await this._projectRepo.updateProject(
-      userId,
-      data,
-      checkData
-    );
+    let reorder = 0;
+    let sort = 'DESC';
+
+    if (!checkNull(data.order)) {
+      reorder = 1;
+      const newOrder = data.order;
+
+      const oldOrder = checkData.order;
+
+      if (newOrder > oldOrder) {
+        sort = 'ASC';
+      } else if (newOrder == oldOrder) {
+        reorder = 0;
+      }
+    }
+
+    const update = await this._projectRepo.updateProject(data, checkData);
+
+    if (checkNull(update)) {
+      return {
+        status: false,
+        message: 'update project failed',
+      };
+    }
+
+    if (reorder === 1) {
+      await this._projectRepo.reorderProject(userId, sort);
+    }
 
     return {
       status: true,
@@ -73,7 +108,6 @@ class ProjectService {
 
   deleteProject = async (id: string, userId: string) => {
     const checkUser = await UserRepo.getOneUser(userId);
-    console.log(checkUser);
     if (!checkUser) {
       return {
         status: false,

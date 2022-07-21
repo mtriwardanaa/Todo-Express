@@ -1,4 +1,6 @@
+import { IsNull } from 'typeorm';
 import AppDataSource from '../../../configs/connect';
+import { checkNull, generateSubtask } from '../../../utils/helper';
 import { TaskReq } from '../interfaces/task-req';
 import { Task } from '../models/task-model';
 
@@ -6,28 +8,54 @@ class TaskRepo {
   private readonly _db = AppDataSource;
   static _db: any = AppDataSource;
 
-  getTask = async (sort: string = 'DESC', projectId: string) => {
-    return this._db
-      .getRepository(Task)
-      .createQueryBuilder('task')
-      .leftJoinAndSelect('task.section', 'section')
-      .where('task.project_id = :projectId', { projectId: projectId })
-      .orderBy('task.order', 'ASC')
-      .addOrderBy('task.updated_at', sort as any)
-      .getMany();
+  static getTask = async (
+    sort: string = 'DESC',
+    projectId: string,
+    sectionId: string | null,
+    parentId: string | null
+  ) => {
+    return this._db.getRepository(Task).find({
+      relations: ['subtasks', 'section', 'parent'],
+      where: [
+        {
+          project_id: projectId,
+          section_id: !checkNull(sectionId) ? sectionId : IsNull(),
+          parent_id: !checkNull(parentId) ? parentId : IsNull(),
+        },
+      ],
+      order: {
+        order: 'ASC',
+        updated_at: sort,
+        subtasks: {
+          order: 'ASC',
+        },
+      },
+    });
   };
 
-  countTask = async (projectId: string) => {
+  static countTask = async (
+    projectId: string,
+    sectionId: string,
+    parentId: string | null
+  ) => {
     const task = this._db
       .createQueryBuilder()
       .select('task')
       .from(Task, 'task')
-      .where('task.project_id = :projectId', { projectId: projectId });
+      .where('task.project_id = :projectId', { projectId });
+
+    checkNull(sectionId)
+      ? task.andWhere('task.section_id IS NULL')
+      : task.andWhere('task.section_id = :sectionId', { sectionId });
+
+    checkNull(parentId)
+      ? task.andWhere('task.parent_id IS NULL')
+      : task.andWhere('task.parent_id = :parentId', { parentId });
 
     return task.getCount();
   };
 
-  getOneTask = async (id: string) => {
+  static getOneTask = async (id: string) => {
     return this._db
       .createQueryBuilder()
       .select('task')
@@ -53,9 +81,7 @@ class TaskRepo {
     return one ? task.getOne() : task.getMany();
   };
 
-  createTask = async (data: Task, projectId: string) => {
-    data.order = ((await this.countTask(projectId)) as unknown as number) + 1;
-    data.project_id = projectId;
+  createTask = async (data: Task) => {
     const create = await this._db
       .createQueryBuilder()
       .insert()
@@ -66,24 +92,7 @@ class TaskRepo {
     return create.raw[0];
   };
 
-  updateTask = async (data: TaskReq, id: string, taskData: Task) => {
-    let reorder = 0;
-    let sort = 'DESC';
-    Object.entries(data).forEach(async ([key, value], index) => {
-      if (key === 'order') {
-        reorder = 1;
-        const newOrder = value;
-
-        const oldOrder = taskData.order;
-
-        if (newOrder > oldOrder) {
-          sort = 'ASC';
-        } else if (newOrder == oldOrder) {
-          reorder = 0;
-        }
-      }
-    });
-
+  updateTask = async (data: TaskReq, id: string) => {
     const task = await this._db
       .createQueryBuilder()
       .update('task')
@@ -91,33 +100,46 @@ class TaskRepo {
       .where('task.id = :taskId', { taskId: id })
       .execute();
 
-    if (reorder === 1) {
-      await this.reorderTask(sort, taskData.project_id);
-    }
-
     return task;
   };
 
   deleteTask = async (id: string, projectId: string) => {
     const deleteTask = await Task.delete(id);
 
-    await this.reorderTask('DESC', projectId);
+    // await this.reorderTask('DESC', projectId);
 
     return deleteTask;
   };
 
-  reorderTask = async (sort: string = 'DESC', projectId: string) => {
-    const task: any = await this.getTask(sort, projectId);
-    if (task) {
-      task.forEach(async (value: any, index: any) => {
-        await this._db
-          .createQueryBuilder()
-          .update('task')
-          .set({ order: index + 1 })
-          .where('id = :taskId', { taskId: value.id })
-          .execute();
-      });
-    }
+  static reorderTask = async (dataTask: Task[]) => {
+    dataTask.forEach(async (value: any, index: any) => {
+      let sectionOrder = 0;
+      if (!checkNull(value.section_id)) {
+        sectionOrder = value.section.order;
+      }
+
+      if (!checkNull(value.parent_id)) {
+        sectionOrder = value.parent.order;
+      }
+
+      await this._db
+        .createQueryBuilder()
+        .update('task')
+        .set({ order: `${sectionOrder}${index + 1}` })
+        .where('id = :taskId', { taskId: value.id })
+        .execute();
+
+      if (!checkNull(value.subtasks)) {
+        value.subtasks.forEach(async (sub: any, idx: any) => {
+          await this._db
+            .createQueryBuilder()
+            .update('task')
+            .set({ order: `${sectionOrder}${index + 1}${idx + 1}` })
+            .where('id = :taskId', { taskId: sub.id })
+            .execute();
+        });
+      }
+    });
   };
 }
 

@@ -11,7 +11,7 @@ class TaskController {
       if (list.status) {
         res.json({
           status: 'success',
-          data: list.data,
+          data: list,
           message: 'get task success',
         });
       } else {
@@ -74,7 +74,7 @@ class TaskController {
         req.body,
         req.params.id
       );
-      if (update.status) {
+      if (update!.status) {
         res.json({
           status: 'success',
           update,
@@ -83,7 +83,7 @@ class TaskController {
       } else {
         res.json({
           status: 'fail',
-          message: update.message,
+          message: update!.message,
         });
       }
     } catch (error) {

@@ -51,8 +51,7 @@ class ProjectRepo {
     return one ? project.getOne() : project.getMany();
   };
 
-  createProject = async (data: Project, userId: string) => {
-    data.order = ((await this.countProject(userId)) as unknown as number) + 1;
+  createProject = async (data: Project) => {
     const create = await this._db
       .createQueryBuilder()
       .insert()
@@ -63,28 +62,7 @@ class ProjectRepo {
     return create.raw[0];
   };
 
-  updateProject = async (
-    userId: string,
-    data: ProjectReq,
-    dataProject: Project
-  ) => {
-    let reorder = 0;
-    let sort = 'DESC';
-    Object.entries(data).forEach(async ([key, value], index) => {
-      if (key === 'order') {
-        reorder = 1;
-        const newOrder = value;
-
-        const oldOrder = dataProject.order;
-
-        if (newOrder > oldOrder) {
-          sort = 'ASC';
-        } else if (newOrder == oldOrder) {
-          reorder = 0;
-        }
-      }
-    });
-
+  updateProject = async (data: ProjectReq, dataProject: Project) => {
     const project = await this._db
       .createQueryBuilder()
       .update('project')
@@ -92,16 +70,11 @@ class ProjectRepo {
       .where('project.id = :projectId', { projectId: dataProject.id })
       .execute();
 
-    if (reorder === 1) {
-      await this.reorderProject(userId, sort);
-    }
-
     return project;
   };
 
   deleteProject = async (id: string, userId: string) => {
     const deleteProject = await Project.delete(id);
-    console.log(deleteProject);
     await this.reorderProject(userId);
 
     return deleteProject;

@@ -1,3 +1,4 @@
+import { IsNull } from 'typeorm';
 import AppDataSource from '../../../configs/connect';
 import { SectionReq } from '../interfaces/section-req';
 import { Section } from '../models/section-model';
@@ -18,6 +19,24 @@ class SectionRepo {
     return section.getMany();
   };
 
+  static getSectionWithTask = async (
+    projectId: string,
+    sort: string = 'DESC'
+  ) => {
+    return this._db
+      .getRepository(Section)
+      .createQueryBuilder('section')
+      .leftJoinAndSelect('section.tasks', 'tasks')
+      .leftJoinAndSelect('tasks.subtasks', 'subtasks')
+      .where('section.project_id = :projectId', { projectId })
+      .andWhere('tasks.parent_id IS NULL')
+      .orderBy('section.order', 'ASC')
+      .addOrderBy('section.updated_at', sort)
+      .addOrderBy('tasks.order', 'ASC')
+      .addOrderBy('subtasks.order', 'ASC')
+      .getMany();
+  };
+
   countSection = async (projectId: string) => {
     const section = this._db
       .createQueryBuilder()
@@ -28,11 +47,11 @@ class SectionRepo {
     return section.getCount();
   };
 
-  getOneSection = async (id: string) => {
+  static getOneSection = async (id: string) => {
     return this._db
-      .createQueryBuilder()
-      .select('section')
-      .from(Section, 'section')
+      .getRepository(Section)
+      .createQueryBuilder('section')
+      .leftJoinAndSelect('section.tasks', 'tasks')
       .where('section.id = :sectionId', { sectionId: id })
       .getOne();
   };
@@ -68,28 +87,7 @@ class SectionRepo {
     return create.raw[0];
   };
 
-  updateSection = async (
-    data: SectionReq,
-    id: string,
-    sectionData: Section
-  ) => {
-    let reorder = 0;
-    let sort = 'DESC';
-    Object.entries(data).forEach(async ([key, value], index) => {
-      if (key === 'order') {
-        reorder = 1;
-        const newOrder = value;
-
-        const oldOrder = sectionData.order;
-
-        if (newOrder > oldOrder) {
-          sort = 'ASC';
-        } else if (newOrder == oldOrder) {
-          reorder = 0;
-        }
-      }
-    });
-
+  updateSection = async (data: SectionReq, id: string) => {
     const section = await this._db
       .createQueryBuilder()
       .update('section')
@@ -97,25 +95,18 @@ class SectionRepo {
       .where('section.id = :sectionId', { sectionId: id })
       .execute();
 
-    if (reorder === 1) {
-      await this.reorderSection(sort, sectionData.project_id);
-    }
-
     return section;
   };
 
-  deleteSection = async (id: string, projectId: string) => {
+  deleteSection = async (id: string) => {
     const deleteSection = await Section.delete(id);
-
-    await this.reorderSection('DESC', projectId);
 
     return deleteSection;
   };
 
-  reorderSection = async (sort: string = 'DESC', projectId: string) => {
-    const section: any = await this.getSection(sort, projectId);
-    if (section) {
-      section.forEach(async (value: any, index: any) => {
+  reorderSection = async (sectionData: any) => {
+    if (sectionData) {
+      sectionData.forEach(async (value: any, index: any) => {
         await this._db
           .createQueryBuilder()
           .update('section')

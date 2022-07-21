@@ -1,12 +1,9 @@
+import { checkNull, generateSubtask } from '../../../utils/helper';
 import ProjectRepo from '../../project/repositories/project-repo';
-import { SectionRes } from '../interfaces/section-res';
 import { TaskReq } from '../interfaces/task-req';
 import { Task } from '../models/task-model';
+import SectionRepo from '../repositories/section-repo';
 import TaskRepo from '../repositories/task-repo';
-
-interface NameInterface {
-  [key: string]: Task[];
-}
 
 class TaskService {
   constructor(private readonly _taskRepo: TaskRepo) {}
@@ -20,62 +17,103 @@ class TaskService {
       };
     }
 
-    const getData = await this._taskRepo.getTask('DESC', projectId);
-
-    const subtask = await this.generateSubtask(getData);
-    const sect = await this.generateSection(subtask);
-    console.log(sect);
+    const getTaskNullSection = await TaskRepo.getTask(
+      'DESC',
+      projectId,
+      null,
+      null
+    );
+    const getTaskWithSection = await SectionRepo.getSectionWithTask(projectId);
     return {
       status: true,
-      data: sect,
+      dataNoSection: getTaskNullSection,
+      dataWithSection: getTaskWithSection,
     };
   };
 
-  generateSubtask = async (arr: Task[], parent = null) => {
-    let data: any[] = [];
-    arr.forEach(async (value: any, index: any) => {
-      if (value.parent_id == parent) {
-        value.subtasks = await this.generateSubtask(arr, value.id);
-        data.push(value);
-      }
-    });
-    return data;
-  };
-
-  generateSection = async (arr: Task[], section_id = null) => {
-    return arr.reduce((group: NameInterface, value) => {
-      let ampas = 'ampas';
-      if (value.section_id != null) {
-        ampas = value.section.name;
-      }
-      group[ampas] = group[ampas] ?? [];
-      group[ampas].push(value);
-      return group;
-    }, {});
-  };
-
   getOneTask = async (id: string) => {
-    return this._taskRepo.getOneTask(id);
+    return TaskRepo.getOneTask(id);
   };
 
-  createTask = async (data: Task, projectId: string) => {
-    const checkData = await ProjectRepo.getOneProject(projectId);
-    if (checkData == null) {
+  createTask = async (dataReq: Task, projectId: string) => {
+    let sectionOrder = 0;
+    let sectionId = null;
+    let parentId = null;
+
+    const checkProject = await ProjectRepo.getOneProject(projectId);
+    if (checkNull(checkProject)) {
       return {
         status: false,
         message: 'project not found',
       };
     }
 
-    const create = await this._taskRepo.createTask(data, projectId);
+    if (!checkNull(dataReq.section_id)) {
+      const checkSection = await SectionRepo.getOneSection(dataReq.section_id);
+      if (checkSection) {
+        sectionOrder = checkSection.order;
+        sectionId = checkSection.id;
+      }
+    }
+
+    if (!checkNull(dataReq.parent_id)) {
+      const checkParent = await TaskRepo.getOneTask(dataReq.parent_id);
+      if (checkNull(checkParent)) {
+        return {
+          status: false,
+          message: 'parent task not found',
+        };
+      }
+
+      if (!checkNull(checkParent.parent_id)) {
+        return {
+          status: false,
+          message: 'parent already has parent id, not available now',
+        };
+      }
+
+      sectionOrder = checkParent.order;
+      parentId = checkParent.id;
+      sectionId = checkParent.section_id;
+      dataReq.section_id = checkParent.section_id;
+    }
+
+    const countTask = (await TaskRepo.countTask(
+      projectId,
+      sectionId,
+      parentId
+    )) as unknown as number;
+    const order = ((countTask as unknown as number) + 1) as unknown as string;
+
+    console.log(countTask, sectionId, parentId);
+    dataReq.order = `${sectionOrder}${order}`;
+    dataReq.project_id = projectId;
+
+    const create = await this._taskRepo.createTask(dataReq);
+    if (checkNull(create)) {
+      return {
+        status: false,
+        message: 'create task failed',
+      };
+    }
+
     return {
       status: true,
       data: create,
     };
   };
 
-  updateTask = async (data: TaskReq, id: string) => {
-    const checkData = await this._taskRepo.getOneTask(id);
+  updateTask = async (newData: TaskReq, id: string) => {
+    let sort = 'DESC';
+    let reorder = 0;
+    let reorderbySection = 0;
+    let newSectionReorder = 0;
+    let sectionOrder = 0;
+    let parentId = null;
+    let dataNewSection = null;
+    let dataOldSection = null;
+
+    const checkData = await TaskRepo.getOneTask(id);
     if (checkData == null) {
       return {
         status: false,
@@ -83,7 +121,109 @@ class TaskService {
       };
     }
 
-    const updateData = await this._taskRepo.updateTask(data, id, checkData);
+    if (!checkNull(checkData.section_id)) {
+      const checkOldSection = await SectionRepo.getOneSection(
+        checkData.section_id as unknown as string
+      );
+      if (checkNull(checkOldSection)) {
+        return {
+          status: false,
+          message: 'old section not found',
+        };
+      }
+
+      dataOldSection = checkOldSection;
+      sectionOrder = checkOldSection.order;
+    }
+
+    if (!checkNull(newData.new_section_id)) {
+      if (newData.new_section_id != checkData.section_id) {
+        const checkNewSection = await SectionRepo.getOneSection(
+          newData.new_section_id as unknown as string
+        );
+        if (checkNull(checkNewSection)) {
+          return {
+            status: false,
+            message: 'section not found',
+          };
+        }
+
+        dataNewSection = checkNewSection;
+
+        sectionOrder = checkNewSection.order;
+        if (newData.new_section_id != checkData.section_id) {
+          newSectionReorder = 1;
+          reorderbySection = 1;
+
+          newData.section_id = newData.new_section_id;
+          delete newData.new_section_id;
+        }
+      }
+    }
+
+    if (!checkNull(checkData.parent_id)) {
+      const checkParent = await TaskRepo.getOneTask(checkData.parent_id);
+      if (checkNull(checkParent)) {
+        return {
+          status: false,
+          message: 'parent task not found',
+        };
+      }
+
+      sectionOrder = checkParent.order;
+      parentId = checkParent.id;
+    }
+
+    if (!checkNull(newData.order)) {
+      reorder = 1;
+      newData.order = `${sectionOrder}${newData.order}`;
+      const newOrder = newData.order;
+
+      const oldOrder = checkData.order;
+
+      if (newOrder > oldOrder) {
+        sort = 'ASC';
+      } else if (newOrder == oldOrder) {
+        reorder = 0;
+      }
+    }
+
+    const updateData = await this._taskRepo.updateTask(newData, id);
+    if (!updateData) {
+      return {
+        status: false,
+        message: 'update failed',
+      };
+    }
+
+    if (reorder === 1 || reorderbySection === 1) {
+      let dataOldSectionId = null;
+      if (!checkNull(dataOldSection)) {
+        dataOldSectionId = dataOldSection.id;
+      }
+
+      const task = await TaskRepo.getTask(
+        sort,
+        checkData.project_id,
+        dataOldSectionId,
+        parentId
+      );
+
+      console.log(task);
+      if (!checkNull(task)) {
+        await TaskRepo.reorderTask(task);
+      }
+
+      if (newSectionReorder == 1) {
+        // await TaskRepo.reorderTask(
+        //   sort,
+        //   checkData.project_id,
+        //   dataNewSection.id,
+        //   null
+        // );
+      }
+    }
+
     return {
       status: true,
       data: updateData,
@@ -91,7 +231,7 @@ class TaskService {
   };
 
   deleteTask = async (id: string) => {
-    const checkData = await this._taskRepo.getOneTask(id);
+    const checkData = await TaskRepo.getOneTask(id);
     if (checkData == null) {
       return {
         status: false,
