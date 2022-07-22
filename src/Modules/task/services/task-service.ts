@@ -85,7 +85,6 @@ class TaskService {
     )) as unknown as number;
     const order = ((countTask as unknown as number) + 1) as unknown as string;
 
-    console.log(countTask, sectionId, parentId);
     dataReq.order = `${sectionOrder}${order}`;
     dataReq.project_id = projectId;
 
@@ -106,12 +105,19 @@ class TaskService {
   updateTask = async (newData: TaskReq, id: string) => {
     let sort = 'DESC';
     let reorder = 0;
-    let reorderbySection = 0;
+
+    let dataOldSectionId = null;
+    let dataOldSectionNull = '-';
+    let dataNewSectionId = null;
+
+    let dataOldParentId = null;
+    let dataOldParentNull = '-';
+    let dataNewParentId = null;
+
+    let prefixOrder = 0;
+
     let newSectionReorder = 0;
-    let sectionOrder = 0;
-    let parentId = null;
-    let dataNewSection = null;
-    let dataOldSection = null;
+    let newParentReorder = 0;
 
     const checkData = await TaskRepo.getOneTask(id);
     if (checkData == null) {
@@ -119,6 +125,29 @@ class TaskService {
         status: false,
         message: 'task not found',
       };
+    }
+
+    if (
+      !checkNull(newData.new_parent_id) &&
+      !checkNull(newData.new_section_id)
+    ) {
+      let id = newData.new_parent_id == '-' ? null : newData.new_parent_id;
+      let section_id =
+        newData.new_section_id == '-' ? null : newData.new_section_id;
+
+      const checkDataParentSection = await TaskRepo.getTaskById(
+        checkData.project_id,
+        section_id!,
+        id!
+      );
+
+      console.log(checkDataParentSection);
+      if (checkNull(checkDataParentSection)) {
+        return {
+          status: false,
+          message: 'task with section and parent not found',
+        };
+      }
     }
 
     if (!checkNull(checkData.section_id)) {
@@ -132,32 +161,35 @@ class TaskService {
         };
       }
 
-      dataOldSection = checkOldSection;
-      sectionOrder = checkOldSection.order;
+      dataOldSectionId = checkOldSection.id;
+      dataOldSectionNull = checkOldSection.id;
+      prefixOrder = checkOldSection.order;
     }
 
     if (!checkNull(newData.new_section_id)) {
-      if (newData.new_section_id != checkData.section_id) {
-        const checkNewSection = await SectionRepo.getOneSection(
-          newData.new_section_id as unknown as string
-        );
-        if (checkNull(checkNewSection)) {
-          return {
-            status: false,
-            message: 'section not found',
-          };
+      if (newData.new_section_id != dataOldSectionNull) {
+        if (newData.new_section_id != '-') {
+          const checkNewSection = await SectionRepo.getOneSection(
+            newData.new_section_id as unknown as string
+          );
+          if (checkNull(checkNewSection)) {
+            return {
+              status: false,
+              message: 'section not found',
+            };
+          }
+
+          dataNewSectionId = checkNewSection.id;
+          prefixOrder = checkNewSection.order;
+        } else {
+          newData.new_section_id = null as unknown as string;
         }
 
-        dataNewSection = checkNewSection;
+        newSectionReorder = 1;
+        reorder = 1;
 
-        sectionOrder = checkNewSection.order;
-        if (newData.new_section_id != checkData.section_id) {
-          newSectionReorder = 1;
-          reorderbySection = 1;
-
-          newData.section_id = newData.new_section_id;
-          delete newData.new_section_id;
-        }
+        newData.section_id = newData.new_section_id;
+        delete newData.new_section_id;
       }
     }
 
@@ -170,21 +202,61 @@ class TaskService {
         };
       }
 
-      sectionOrder = checkParent.order;
-      parentId = checkParent.id;
+      prefixOrder = checkParent.order;
+      dataOldParentId = checkParent.id;
+      dataOldParentNull = checkParent.id;
+    }
+
+    if (!checkNull(newData.new_parent_id)) {
+      if (newData.new_parent_id == id) {
+        return {
+          status: false,
+          message: 'parent task not available',
+        };
+      }
+
+      if (newData.new_parent_id != dataOldParentNull) {
+        if (newData.new_parent_id != '-') {
+          const checkNewParent = await TaskRepo.getOneTask(
+            newData.new_parent_id!
+          );
+          if (checkNull(checkNewParent)) {
+            return {
+              status: false,
+              message: 'new parent task not found',
+            };
+          }
+
+          if (!checkNull(checkNewParent.parent_id)) {
+            return {
+              status: false,
+              message: 'parent already has parent id, not available now',
+            };
+          }
+
+          prefixOrder = checkNewParent.order;
+          dataNewParentId = checkNewParent.id;
+        } else {
+          newData.new_parent_id = null as unknown as string;
+        }
+
+        newParentReorder = 1;
+        reorder = 1;
+
+        newData.parent_id = newData.new_parent_id;
+        delete newData.new_parent_id;
+      }
     }
 
     if (!checkNull(newData.order)) {
       reorder = 1;
-      newData.order = `${sectionOrder}${newData.order}`;
+      newData.order = `${prefixOrder}${newData.order}`;
       const newOrder = newData.order;
 
       const oldOrder = checkData.order;
 
       if (newOrder > oldOrder) {
         sort = 'ASC';
-      } else if (newOrder == oldOrder) {
-        reorder = 0;
       }
     }
 
@@ -196,31 +268,52 @@ class TaskService {
       };
     }
 
-    if (reorder === 1 || reorderbySection === 1) {
-      let dataOldSectionId = null;
-      if (!checkNull(dataOldSection)) {
-        dataOldSectionId = dataOldSection.id;
-      }
-
+    if (reorder === 1) {
       const task = await TaskRepo.getTask(
         sort,
         checkData.project_id,
         dataOldSectionId,
-        parentId
+        dataOldParentId
       );
 
-      console.log(task);
       if (!checkNull(task)) {
         await TaskRepo.reorderTask(task);
       }
 
       if (newSectionReorder == 1) {
-        // await TaskRepo.reorderTask(
-        //   sort,
-        //   checkData.project_id,
-        //   dataNewSection.id,
-        //   null
-        // );
+        let idParentUpdate = dataOldParentId;
+        if (!checkNull(newData.new_parent_id)) {
+          idParentUpdate = dataNewParentId;
+        }
+
+        const task = await TaskRepo.getTask(
+          sort,
+          checkData.project_id,
+          dataNewSectionId,
+          idParentUpdate
+        );
+
+        if (!checkNull(task)) {
+          await TaskRepo.reorderTask(task);
+        }
+      }
+
+      if (newParentReorder == 1) {
+        let idSectionUpdate = dataOldSectionId;
+        if (!checkNull(newData.new_parent_id)) {
+          idSectionUpdate = dataNewSectionId;
+        }
+
+        const task = await TaskRepo.getTask(
+          sort,
+          checkData.project_id,
+          idSectionUpdate,
+          dataNewParentId
+        );
+
+        if (!checkNull(task)) {
+          await TaskRepo.reorderTask(task);
+        }
       }
     }
 

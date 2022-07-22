@@ -33,6 +33,22 @@ class TaskRepo {
     });
   };
 
+  static getTaskById = async (
+    projectId: string,
+    sectionId: string | null,
+    id: string | null
+  ) => {
+    return this._db.getRepository(Task).find({
+      where: [
+        {
+          project_id: projectId,
+          section_id: !checkNull(sectionId) ? sectionId : IsNull(),
+          id: !checkNull(id) ? id : IsNull(),
+        },
+      ],
+    });
+  };
+
   static countTask = async (
     projectId: string,
     sectionId: string,
@@ -72,9 +88,10 @@ class TaskRepo {
 
     Object.entries(params).forEach(([key, value], index) => {
       if (index === 0) {
-        task.where(`task.${key} = :param`, { param: 'ampas' });
+        task.where(`${key} = :param`, { param: value });
       } else {
-        task.andWhere(`task.${key} = :param`, { param: value });
+        console.log(key, value, `${key} = :param`);
+        task.andWhere(`${key} = :param`, { param: value });
       }
     });
 
