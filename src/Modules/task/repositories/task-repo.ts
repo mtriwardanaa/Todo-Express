@@ -15,7 +15,7 @@ class TaskRepo {
     parentId: string | null
   ) => {
     return this._db.getRepository(Task).find({
-      relations: ['subtasks', 'section', 'parent'],
+      relations: ['comments', 'subtasks', 'section', 'parent'],
       where: [
         {
           project_id: projectId,

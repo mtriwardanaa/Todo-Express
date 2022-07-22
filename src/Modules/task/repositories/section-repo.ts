@@ -28,6 +28,7 @@ class SectionRepo {
       .createQueryBuilder('section')
       .leftJoinAndSelect('section.tasks', 'tasks')
       .leftJoinAndSelect('tasks.subtasks', 'subtasks')
+      .leftJoinAndSelect('tasks.comments', 'comments')
       .where('section.project_id = :projectId', { projectId })
       .andWhere('tasks.parent_id IS NULL')
       .orderBy('section.order', 'ASC')

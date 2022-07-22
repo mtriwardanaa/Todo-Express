@@ -29,7 +29,7 @@ class ProjectService {
 
   createProject = async (data: Project, userId: string) => {
     const checkUser = await UserRepo.getOneUser(userId);
-    if (!checkUser) {
+    if (checkNull(checkUser)) {
       return {
         status: false,
         message: 'user not found',
@@ -56,7 +56,7 @@ class ProjectService {
 
   updateProject = async (userId: string, data: ProjectReq, id: string) => {
     const checkUser = await UserRepo.getOneUser(userId);
-    if (!checkUser) {
+    if (checkNull(checkUser)) {
       return {
         status: false,
         message: 'user not found',
@@ -64,7 +64,7 @@ class ProjectService {
     }
 
     const checkData = await ProjectRepo.getOneProject(id);
-    if (!checkData) {
+    if (checkNull(checkData)) {
       return {
         status: false,
         message: 'project not found',

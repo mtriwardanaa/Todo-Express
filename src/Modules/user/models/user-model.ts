@@ -11,6 +11,7 @@ import {
 import { hashPass } from '../../../utils/bcrypt-pass';
 import { Project } from '../../project/models/project-model';
 import { Task } from '../../task/models/task-model';
+import { Comment } from '../../comment/models/comment-model';
 
 @Entity('user')
 export class User extends BaseEntity {
@@ -45,6 +46,10 @@ export class User extends BaseEntity {
   //user to project table
   @OneToMany(() => Project, (project) => project.user)
   projects!: Project;
+
+  //user to comment table
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments!: Comment;
 
   @BeforeInsert()
   bycriptPass() {

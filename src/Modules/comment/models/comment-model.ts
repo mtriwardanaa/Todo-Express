@@ -9,6 +9,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Task } from '../../task/models/task-model';
+import { User } from '../../user/models/user-model';
 
 @Entity('comment')
 export class Comment extends BaseEntity {
@@ -17,6 +18,9 @@ export class Comment extends BaseEntity {
 
   @Column()
   task_id!: string;
+
+  @Column()
+  user_id!: string;
 
   @Column()
   comment!: string;
@@ -35,4 +39,13 @@ export class Comment extends BaseEntity {
     name: 'task_id',
   })
   task!: Task;
+
+  //comment to task table
+  @ManyToOne(() => User, (user) => user.comments, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  user!: User;
 }
