@@ -9,6 +9,10 @@ import authMiddleware from '../middlewares/auth-middleware';
 
 const router = Router();
 
+router.get('/', (req: Request, res: Response, next: NextFunction) => {
+  res.status(200).json({ message: 'Pong non route' });
+});
+
 router.get('/ping', (req: Request, res: Response, next: NextFunction) => {
   res.status(200).json({ message: 'Pong index route' });
 });
