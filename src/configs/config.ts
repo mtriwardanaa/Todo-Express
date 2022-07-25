@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const {
-  APP_PORT,
+  PORT,
   APP_MODE,
   DB_TYPE,
   DB_HOST,
@@ -17,7 +17,7 @@ const {
 } = process.env;
 
 export default {
-  appPort: APP_PORT || 8080,
+  appPort: PORT || 8080,
   appMode: APP_MODE,
   dbType: DB_TYPE || 'postgres',
   dbHost: DB_HOST,
