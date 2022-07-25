@@ -1,7 +1,7 @@
 import express from 'express';
-import connect from './src/configs/connect';
-import config from './src/configs/config';
-import startServer from './src/configs/start-server';
+import connect from './configs/connect';
+import config from './configs/config';
+import startServer from './configs/start-server';
 
 const app = express();
 const PORT = config.appPort;
