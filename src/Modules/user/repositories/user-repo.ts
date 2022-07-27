@@ -25,7 +25,7 @@ class UserRepo {
       .getOne();
   }
 
-  async getOneUserByUsername(username: UserReq['username']) {
+  static async getOneUserByUsername(username: UserReq['username']) {
     return UserRepo._db
       .createQueryBuilder()
       .select('user')
@@ -58,12 +58,14 @@ class UserRepo {
   }
 
   async updateUser(data: UserReq, id: UserReq['id']) {
-    return this._db
+    const update = await this._db
       .createQueryBuilder()
       .update('user')
       .set(data)
       .where('id = :userId', { userId: id })
       .execute();
+
+    return update;
   }
 
   async deleteUser(id: UserReq['id']) {
@@ -71,7 +73,7 @@ class UserRepo {
   }
 
   async authUser(username: UserReq['username'], password: UserReq['password']) {
-    const check = await this.getOneUserByUsername(username);
+    const check = await UserRepo.getOneUserByUsername(username);
     if (!check) {
       return null;
     }

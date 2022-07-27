@@ -1,6 +1,6 @@
 import { NextFunction, Response, Request } from 'express';
 
-interface Error {
+interface Erroree {
   name?: string;
   stack?: string;
   message?: string;
@@ -8,7 +8,7 @@ interface Error {
 }
 
 const errorHandler = (
-  error: Error,
+  error: Erroree,
   req: Request,
   res: Response,
   next: NextFunction

@@ -1,4 +1,5 @@
 import { Task } from '../Modules/task/models/task-model';
+import UserRepo from '../Modules/user/repositories/user-repo';
 
 const checkNull = (data: any) => {
   if (data == null) {
@@ -38,4 +39,21 @@ const generateSubtask = async (arr: Task[], parent = null) => {
   return data;
 };
 
-export { checkNull, generateSubtask };
+const checkUnique = async (
+  value: string,
+  helpers: { error: (arg0: string) => any }
+) => {
+  return helpers.error('usename not available');
+  const check = UserRepo.getOneUserByUsername(value).then((val) => {
+    if (!checkNull(val)) {
+      console.log('aa');
+      // return true;
+      return helpers.error('usename not available');
+    } else {
+      console.log('bb');
+      return value;
+    }
+  });
+};
+
+export { checkNull, generateSubtask, checkUnique };

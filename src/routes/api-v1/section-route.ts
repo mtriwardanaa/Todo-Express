@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction } from 'express';
 import SectionController from '../../Modules/task/controllers/section-controller';
 import SectionService from '../../Modules/task/services/section-service';
 import SectionRepo from '../../Modules/task/repositories/section-repo';
+import { ValidateJoi } from '../../middlewares/validate-req';
+import { Schema } from '../../Modules/task/validations/section-validate';
 
 const router = Router();
 const repository = new SectionRepo();
@@ -14,8 +16,16 @@ router.get('/ping', (req: Request, res: Response, next: NextFunction) => {
 
 router.get('/project/:projectId', _sectionController.getData);
 router.get('/:id', _sectionController.getOneData);
-router.post('/create/:projectId', _sectionController.createData);
-router.put('/update/:id', _sectionController.updateData);
+router.post(
+  '/create/:projectId',
+  ValidateJoi(Schema.create),
+  _sectionController.createData
+);
+router.put(
+  '/update/:id',
+  ValidateJoi(Schema.update),
+  _sectionController.updateData
+);
 router.delete('/delete/:id', _sectionController.deleteData);
 
 export default router;

@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction } from 'express';
 import ProjectController from '../../Modules/project/controllers/project-controller';
 import ProjectService from '../../Modules/project/services/project-service';
 import ProjectRepo from '../../Modules/project/repositories/project-repo';
+import { ValidateJoi } from '../../middlewares/validate-req';
+import { Schema } from '../../Modules/project/validations/project-validate';
 
 const router = Router();
 const repository = new ProjectRepo();
@@ -14,8 +16,16 @@ router.get('/ping', (req: Request, res: Response, next: NextFunction) => {
 
 router.get('/', _projectController.getData);
 router.get('/:id', _projectController.getOneData);
-router.post('/create', _projectController.createData);
-router.put('/update/:id', _projectController.updateData);
+router.post(
+  '/create',
+  ValidateJoi(Schema.create),
+  _projectController.createData
+);
+router.put(
+  '/update/:id',
+  ValidateJoi(Schema.create),
+  _projectController.updateData
+);
 router.delete('/delete/:id', _projectController.deleteData);
 
 export default router;

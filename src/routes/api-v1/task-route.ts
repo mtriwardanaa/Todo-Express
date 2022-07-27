@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction } from 'express';
 import TaskController from '../../Modules/task/controllers/task-controller';
 import TaskService from '../../Modules/task/services/task-service';
 import TaskRepo from '../../Modules/task/repositories/task-repo';
+import { ValidateJoi } from '../../middlewares/validate-req';
+import { Schema } from '../../Modules/task/validations/task-validate';
 
 const router = Router();
 const repository = new TaskRepo();
@@ -14,8 +16,16 @@ router.get('/ping', (req: Request, res: Response, next: NextFunction) => {
 
 router.get('/project/:projectId', _taskController.getData);
 router.get('/:id', _taskController.getOneData);
-router.post('/create/:projectId', _taskController.createData);
-router.put('/update/:id', _taskController.updateData);
+router.post(
+  '/create/:projectId',
+  ValidateJoi(Schema.create),
+  _taskController.createData
+);
+router.put(
+  '/update/:id',
+  ValidateJoi(Schema.update),
+  _taskController.updateData
+);
 router.delete('/delete/:id', _taskController.deleteData);
 
 export default router;
