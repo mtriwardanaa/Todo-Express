@@ -14,7 +14,10 @@ router.get('/', (req: Request, res: Response, next: NextFunction) => {
 });
 
 router.get('/ping', (req: Request, res: Response, next: NextFunction) => {
-  res.status(200).json({ message: 'Pong index route' });
+  const error = new Error('Not found');
+  next(error);
+  // res.status(404).json({ message: error.message });
+  // res.status(200).json({ message: 'Pong index route' });
 });
 
 router.use('/todo', TodoRoutes);

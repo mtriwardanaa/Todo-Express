@@ -6,7 +6,6 @@ const startServer = (router: Express) => {
   console.log('start server');
   router.use(express.urlencoded({ extended: true }));
   router.use(express.json());
-  router.use(ErrorHandler);
 
   /** Rules of our API */
   router.use((req: Request, res: Response, next: NextFunction) => {
@@ -31,9 +30,10 @@ const startServer = (router: Express) => {
 
   router.use((req: Request, res: Response, next: NextFunction) => {
     const error = new Error('Not found');
-
-    res.status(404).json({ message: error.message });
+    next(error);
   });
+
+  router.use(ErrorHandler);
 };
 
 export default startServer;
