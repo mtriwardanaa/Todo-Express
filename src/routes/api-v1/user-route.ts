@@ -16,7 +16,7 @@ router.get('/ping', (req: Request, res: Response, next: NextFunction) => {
 });
 
 router.post('/create', ValidateJoi(Schema.create), _userController.createData);
-router.post('/login/', ValidateJoi(Schema.login), _userController.login);
+router.post('/login', ValidateJoi(Schema.login), _userController.login);
 
 router.use(authMiddleware);
 router.get('/', _userController.getData);

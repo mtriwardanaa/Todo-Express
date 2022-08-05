@@ -41,7 +41,7 @@ class UserController {
   createData = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this._userService.createUser(req.body);
-      res.json({
+      return res.json({
         status: 'success',
         data,
         message: 'create user success',
