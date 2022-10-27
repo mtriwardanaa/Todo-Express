@@ -1,5 +1,5 @@
 export type SectionRes = {
-  id?: string;
-  name: string;
-  order: string;
-};
+    id?: string
+    name: string
+    order: string
+}

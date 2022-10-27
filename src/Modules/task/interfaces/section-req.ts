@@ -1,5 +1,5 @@
 export interface SectionReq {
-  id?: string;
-  name: string;
-  order: number;
+    id?: string
+    name: string
+    order: number
 }

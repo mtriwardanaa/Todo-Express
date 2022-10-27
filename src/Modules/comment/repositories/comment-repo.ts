@@ -1,66 +1,66 @@
-import AppDataSource from '../../../configs/connect';
-import { checkNull } from '../../../utils/helper';
-import { CommentReq } from '../interfaces/comment-req';
-import { Comment } from '../models/comment-model';
+import AppDataSource from '../../../configs/connect'
+import { checkNull } from '../../../utils/helper'
+import { CommentReq } from '../interfaces/comment-req'
+import { Comment } from '../models/comment-model'
 
 class CommentRepo {
-  private readonly _db = AppDataSource;
-  static _db: any = AppDataSource;
+    private readonly _db = AppDataSource
+    static _db: any = AppDataSource
 
-  getComment = async (taskId: string) => {
-    const comment = this._db
-      .createQueryBuilder()
-      .select('comment')
-      .from(Comment, 'comment')
-      .where('comment.task_id = :taskId', { taskId })
-      .addOrderBy('comment.created_at', 'DESC');
+    getComment = async (taskId: string) => {
+        const comment = this._db
+            .createQueryBuilder()
+            .select('comment')
+            .from(Comment, 'comment')
+            .where('comment.task_id = :taskId', { taskId })
+            .addOrderBy('comment.created_at', 'DESC')
 
-    return comment.getMany();
-  };
-
-  static async getOneComment(
-    commentId: CommentReq['id'],
-    userId: string | null = null
-  ) {
-    const comment = this._db
-      .createQueryBuilder()
-      .select('comment')
-      .from(Comment, 'comment')
-      .where('comment.id = :commentId', { commentId });
-
-    if (!checkNull(userId)) {
-      comment.andWhere('comment.user_id = :userId', { userId });
-    } else {
-      comment.andWhere('comment.user_id IS NULL');
+        return comment.getMany()
     }
-    return comment.getOne();
-  }
 
-  createComment = async (data: Comment) => {
-    const create = await this._db
-      .createQueryBuilder()
-      .insert()
-      .into(Comment)
-      .values(data)
-      .execute();
+    static async getOneComment(
+        commentId: CommentReq['id'],
+        userId: string | null = null
+    ) {
+        const comment = this._db
+            .createQueryBuilder()
+            .select('comment')
+            .from(Comment, 'comment')
+            .where('comment.id = :commentId', { commentId })
 
-    return create.raw[0];
-  };
+        if (!checkNull(userId)) {
+            comment.andWhere('comment.user_id = :userId', { userId })
+        } else {
+            comment.andWhere('comment.user_id IS NULL')
+        }
+        return comment.getOne()
+    }
 
-  updateComment = async (data: CommentReq, commentId: string) => {
-    const comment = await this._db
-      .createQueryBuilder()
-      .update('comment')
-      .set(data)
-      .where('comment.id = :commentId', { commentId })
-      .execute();
+    createComment = async (data: Comment) => {
+        const create = await this._db
+            .createQueryBuilder()
+            .insert()
+            .into(Comment)
+            .values(data)
+            .execute()
 
-    return comment;
-  };
+        return create.raw[0]
+    }
 
-  deleteComment = async (commentId: string) => {
-    return Comment.delete(commentId);
-  };
+    updateComment = async (data: CommentReq, commentId: string) => {
+        const comment = await this._db
+            .createQueryBuilder()
+            .update('comment')
+            .set(data)
+            .where('comment.id = :commentId', { commentId })
+            .execute()
+
+        return comment
+    }
+
+    deleteComment = async (commentId: string) => {
+        return Comment.delete(commentId)
+    }
 }
 
-export default CommentRepo;
+export default CommentRepo

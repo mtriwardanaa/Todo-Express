@@ -1,11 +1,11 @@
-import connect from './configs/connect';
-import config from './configs/config';
-import app from './configs/app';
+import connect from './configs/connect'
+import config from './configs/config'
+import app from './configs/app'
 
-const PORT = config.appPort;
+const PORT = config.appPort
 
 app.listen(PORT, async () => {
-  console.log(`Server running ${PORT}`);
+    console.log(`Server running ${PORT}`)
 
-  connect;
-});
+    connect
+})
